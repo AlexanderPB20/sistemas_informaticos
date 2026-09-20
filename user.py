@@ -76,14 +76,14 @@ async def modify(password: str):
         return jsonify({"error":"No se ha recibido JSON"}), 400
 
     #Comprobamos su expiración
-    if tokens[token]["expiration"] < datetime.now()
-        return jsonify('error':'El token introducido expiró'), 403
+    if tokens[token]["expiration"] < datetime.now():
+        return jsonify({'error':'El token introducido expiró'}), 403
     
 
     usuario_uid = tokens[token]["uid"]
     users[usuario_uid]["password"] = hash256(datos.get("password"))
 
-    return jsonify('response':'Password modificada correctamente'), 200
+    return jsonify({'response':'Password modificada correctamente'}), 200
 
 if __name__ == '__main__':
     server_secret = uuid.uuid4()
