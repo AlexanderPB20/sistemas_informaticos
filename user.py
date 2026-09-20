@@ -9,6 +9,7 @@ app = Quart(__name__)
 Almacenamiento de usuarios y contraseñas
 En un entorno real, se usaría una conexión a una base de datos
 '''
+server_secret = None
 users = {}
 tokens = {}
 
@@ -30,20 +31,23 @@ async def create_user():
         return {'error':'No se ha recibido JSON'}, 400
 
     #Generacion del uuid
-    secret_uuid = uuid.uuid4()
-    stringified_uuid = str(secret_uuid)
+    user_uid = uuid.uuid4()
+    stringified_uid = str(user_uuid)
     
     
     #Password hasheada
     password = datos.get('password')
     password256 = hash256(password)
     
+    #Agregar usuario a la "base de datos"
     users[stringified_uuid] = {
                     "user":datos.get('name'),
                     "password":password256
                                 }
 
-    return {"token":token ,"uid":stringified_uuid}, 201
+    token = generate_token(stringified_uid)
+
+    return jsonify({"token":token ,"uid":stringified_uuid}), 201
 
 
 
@@ -60,32 +64,46 @@ Cuando es válido, cambia la contraseña del usuario del token por la introducid
 '''
 @app.patch('/user')
 async def modify(password: str):
-    #Mofify password code goes here
+    #Primero se verifica si el token es válido antes de nada
     token = request.headers.get("Authorization")
-    if not token:
-        #Si no hay cabecera con el token
-        return {'error':'Requerido token de autenticación en la cabecera de la petición'}, 400
+    if not token or token not in tokens:
+        #Si no hay cabecera con el token o no existe en los guardados
+        return jsonify({'error':'No hay token en la cabecera de la petición o es inválido'}), 400
+    
+    #Luego verificamos si ha introducido contraseña
+    datos = await request.get_json()
+    if not datos:
+        return jsonify({"error":"No se ha recibido JSON"}), 400
+
+    #Comprobamos su expiración
+    if tokens[token]["expiration"] < datetime.now()
+        return jsonify('error':'El token introducido expiró'), 403
+    
+
+    usuario_uid = tokens[token]["uid"]
+    users[usuario_uid]["password"] = hash256(datos.get("password"))
+
+    return jsonify('response':'Password modificada correctamente'), 200
 
 if __name__ == '__main__':
+    server_secret = uuid.uuid4()
     app.run(host='localhost', port=5050)
 
 
 '''
 Función que genera un token y hashea el mismo.
-Devuelve EL TOKEN SIN HASHEAR y guarda el hasheado en "la base de datos"
+Devuelve el token hasheado y lo guarda en "la base de datos"
 junto al usuario al que pertenece y la hora de expiración
 '''
 def generate_token(uid: str):
-    #https://stackoverflow.com/a/77251157
-    token = secrets.token_urlsafe(32)
-    hashed_token = hash256(token)
+    hashed_token = uuid.uuid5(server_secret, uid)
 
     #https://stackoverflow.com/questions/13685201
     expiration = datetime.now() + timedelta(minutes = TOKEN_EXPIRATION_TIME)
     tokens[hashed_token] = {"uid":uid,"expiration":expiration}
 
-    return token
+    return hashed_token
 
-#Función usada para hasheo de contraseñas y tokes y limpiar el código principal
+#Función usada para hasheo de contraseñas y limpiar el código principal
 def hash256(data: str) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
