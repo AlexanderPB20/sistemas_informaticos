@@ -9,7 +9,7 @@ app = Quart(__name__)
 Almacenamiento de usuarios y contraseñas
 En un entorno real, se usaría una conexión a una base de datos
 '''
-server_secret = None
+server_secret = uuid.uuid4() #uid único del servidor
 users = {}
 tokens = {}
 
@@ -32,7 +32,7 @@ async def create_user():
 
     #Generacion del uuid
     user_uid = uuid.uuid4()
-    stringified_uid = str(user_uuid)
+    stringified_uid = str(user_uid)
     
     
     #Password hasheada
@@ -40,7 +40,7 @@ async def create_user():
     password256 = hash256(password)
     
     #Agregar usuario a la "base de datos"
-    users[stringified_uuid] = {
+    users[stringified_uid] = {
                     "user":datos.get('name'),
                     "password":password256
                                 }
@@ -63,7 +63,7 @@ Toma el token introducido en la cabecera de la petición y lo valida.
 Cuando es válido, cambia la contraseña del usuario del token por la introducida en el JSON
 '''
 @app.patch('/user')
-async def modify(password: str):
+async def modify():
     #Primero se verifica si el token es válido antes de nada
     token = request.headers.get("Authorization")
     if not token or token not in tokens:
@@ -86,7 +86,6 @@ async def modify(password: str):
     return jsonify({'response':'Password modificada correctamente'}), 200
 
 if __name__ == '__main__':
-    server_secret = uuid.uuid4()
     app.run(host='localhost', port=5050)
 
 
