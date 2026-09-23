@@ -14,6 +14,28 @@ users = {}
 tokens = {}
 
 
+'''
+Función que genera un token y hashea el mismo.
+Devuelve el token hasheado y lo guarda en "la base de datos"
+junto al usuario al que pertenece y la hora de expiración
+'''
+def generate_token(uid: str):
+    hashed_token = uuid.uuid5(server_secret, uid)
+    #https://stackoverflow.com/questions/13685201
+    expiration = datetime.now() + timedelta(minutes = TOKEN_EXPIRATION_TIME)
+    tokens[str(hashed_token)] = {"uid":uid,"expiration":expiration}
+    return hashed_token
+
+#Función usada para hasheo de contraseñas y limpiar el código principal
+def hash256(data: str) -> str:
+    return hashlib.sha256(data.encode()).hexdigest()
+
+
+
+
+
+
+
 
 '''
 Función para gestionar las peticiones PUT.
@@ -28,8 +50,10 @@ async def create_user():
     datos = await request.get_json()
     if not datos:
         #Si no llega un json en la request
-        return {'error':'No se ha recibido JSON'}, 400
-
+        return jsonify({'error':'No se ha recibido JSON'}), 400
+    if not datos.get('name') or not datos.get('password'):
+        #Si falta algún campo en el json
+        return jsonify({'error':'El JSON recibido debe contener campos name (usuario) y password (contraseña)'}), 400
     #Generacion del uuid
     user_uid = uuid.uuid4()
     stringified_uid = str(user_uid)
@@ -46,8 +70,7 @@ async def create_user():
                                 }
 
     token = generate_token(stringified_uid)
-
-    return jsonify({"token":token ,"uid":stringified_uuid}), 201
+    return jsonify({"token":token ,"uid":stringified_uid}), 201
 
 
 
@@ -66,7 +89,8 @@ Cuando es válido, cambia la contraseña del usuario del token por la introducid
 async def modify():
     #Primero se verifica si el token es válido antes de nada
     token = request.headers.get("Authorization")
-    if not token or token not in tokens:
+    token = token[7:] #Eliminar "Bearer" del string
+    if not token or token not in tokens.keys():
         #Si no hay cabecera con el token o no existe en los guardados
         return jsonify({'error':'No hay token en la cabecera de la petición o es inválido'}), 400
     
@@ -74,6 +98,9 @@ async def modify():
     datos = await request.get_json()
     if not datos:
         return jsonify({"error":"No se ha recibido JSON"}), 400
+    if not datos.get('password'):
+        return jsonify({"error":"El JSON recibido no contiene el campo 'password' (contraseña)"}), 400
+
 
     #Comprobamos su expiración
     if tokens[token]["expiration"] < datetime.now():
@@ -89,20 +116,3 @@ if __name__ == '__main__':
     app.run(host='localhost', port=5050)
 
 
-'''
-Función que genera un token y hashea el mismo.
-Devuelve el token hasheado y lo guarda en "la base de datos"
-junto al usuario al que pertenece y la hora de expiración
-'''
-def generate_token(uid: str):
-    hashed_token = uuid.uuid5(server_secret, uid)
-
-    #https://stackoverflow.com/questions/13685201
-    expiration = datetime.now() + timedelta(minutes = TOKEN_EXPIRATION_TIME)
-    tokens[hashed_token] = {"uid":uid,"expiration":expiration}
-
-    return hashed_token
-
-#Función usada para hasheo de contraseñas y limpiar el código principal
-def hash256(data: str) -> str:
-    return hashlib.sha256(data.encode()).hexdigest()
