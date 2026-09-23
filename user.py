@@ -116,3 +116,16 @@ if __name__ == '__main__':
     app.run(host='localhost', port=5050)
 
 
+
+'''
+Podríamos usar una request GET para validar
+desde el microservicio de files si un usuario
+tiene permisos o no para modificar un fichero
+
+Desde files se hace la request a este microservicio,
+entregándole el uid y el fichero y que nos devuelva
+un json que diga si es posible o no con boolean o algún
+otro dato útil
+
+El paquete requests puede hacer esto
+https://stackoverflow.com/questions/77811835'''
