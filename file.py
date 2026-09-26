@@ -166,5 +166,38 @@ async def delete(uid, filename):
 
     return jsonify({'error':'Fichero no encontrado'}),404
 
+'''
+Función para gestionar las peticiones PATCH.
+Dada la ruta, un uid y un nombre de ficero, Cambia la visibilidad del fichero a pública. Esta acción es irreversible.
+Es necesario autenticarse con token para hacer esta acción.
+'''
+@app.patch('/file/<uid>/<filename>')
+async def delete(uid, filename):
+    
+    if not comprobar_uid(uid):
+        return jsonify({'error':'El uid introducido no existe o no es un directorio'}),404
+    
+    #Para modificar la visibilidad de ficheros será necesario autenticarse
+    token = request.headers.get("Authorization")
+    if not token:
+        return jsonify({'error':'La petición debe tener un token de autenticación en la cabecera'}), 400
+    
+    token = token[7:] #Eliminar "Bearer" del string
+    if not validar_token(token, uid)
+        return jsonify({'error': 'Autenticación fallida. Revisa el uid o el token introducidos'}), 401
+
+    ficheros = listar_ficheros(uid, true)
+    for visibility in ficheros:
+        if filename in ficheros[visibility]:
+            if visibility == 'public':
+                #Nota: Decidimos contar este caso como éxito. La petición es para cambiar el fichero a público, y al gestionar
+                # dicha petición, el fichero acaba (o sigue, en este caso) siéndolo.
+                return jsonify({'info': 'El fichero ya es público'}), 400 
+            path = Path('/file/',uid,'/private/',filename)
+            path.move('/file/',uid,'/public/',filename)
+            return jsonify({'info':('Fichero ',filename,' establecido como público')}),200
+
+    return jsonify({'error':'Fichero no encontrado'}),404
+
 if __name__ == '__main__':
     app.run(host='localhost', port=5050)
