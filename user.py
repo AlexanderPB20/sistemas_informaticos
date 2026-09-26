@@ -11,6 +11,7 @@ En un entorno real, se usaría una conexión a una base de datos
 '''
 with open("server_secret.txt") as file:
     server_secret = next(file).strip()
+    server_secret = uuid.UUID(server_secret)
 users = {}
 tokens = {}
 
