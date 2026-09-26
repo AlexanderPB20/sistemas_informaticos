@@ -71,8 +71,35 @@ async def list_documents(uid):
 
     #Respuesta del servidor si no tiene permisos de listar privados
     return jsonify(listar_ficheros(uid, authorized)), 200
+'''
+Función para gestionar las peticiones GET.
+Dada la ruta, un uid y un nombre de fichero, Obtiene el contenido del fichero, si existe.
+Se puede agregar la cabecera de autenticación con token para listar los ficheros privados
+si dicho token es correcto.
+'''
+@app.get('/file/<uid>/<filename>')
+async def get_content(uid, filename):
+    
+    if not comprobar_uid(uid):
+        return jsonify({'error':'El uid introducido no existe o no es un directorio'}),404
+    
+    #Comprobar si se ha añadido cabecera con token para
+    #buscar tanto en los públicos como los ocultos
+    authorized = false
+    token = request.headers.get("Authorization")
+    if token:
+        token = token[7:] #Eliminar "Bearer" del string
+        if validar_token(token, uid):
+            #Caso en el que se tengan permisos para listar los documentos privados
+            authorized = true
 
+    ficheros = listar_ficheros(uid, true)
+    for visibility in ficheros:
+        if filename in ficheros[visibility]:
+            path = Path('/file/',uid,'/',visibility,'/',filename)
+            return jsonify({'content': path.read_text()}),200
 
+    return jsonify({'error':'Fichero no encontrado'}),404
 '''
 Función para gestionar las peticiones PUT.
 Dada la ruta, un uid y un nombre de ficero, Cambia el contenido del fichero al recibido en el JSON adjunto.
