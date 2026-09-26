@@ -17,8 +17,8 @@ El token debe ser solo la cadena con el mismo (sin incluir "bearer")
 def validar_token(token, uid) -> bool:
     hashed_token = uuid.uuid5(server_secret, uid)
     if hashed_token == token:
-        return true
-    return false
+        return True
+    return False
 
 '''
 Función que comprueba si una ruta a los archivos de un usuario (uid)
@@ -32,7 +32,7 @@ Función que lista, dado un uid, los ficheros de ese usuario. Permite listar
 los privados y públicos o sólo los públicados en base al valor de la flag "private"
 No comprueba si el path con ese uid existe o no
 '''
-def listar_ficheros(uid : str, private = false):
+def listar_ficheros(uid : str, private = False):
     file_list = {}
 
     path = Path('./file/',uid,'/public/')
@@ -61,13 +61,13 @@ async def list_documents(uid):
     
     #Comprobar si se ha añadido cabecera con token para
     #mostrar tanto los públicos como los ocultos
-    authorized = false
+    authorized = False
     token = request.headers.get("Authorization")
     if token:
         token = token[7:] #Eliminar "Bearer" del string
         if validar_token(token, uid):
             #Caso en el que se tengan permisos para listar los documentos privados
-            authorized = true
+            authorized = True
 
     #Respuesta del servidor si no tiene permisos de listar privados
     return jsonify(listar_ficheros(uid, authorized)), 200
@@ -85,15 +85,15 @@ async def get_content(uid, filename):
     
     #Comprobar si se ha añadido cabecera con token para
     #buscar tanto en los públicos como los ocultos
-    authorized = false
+    authorized = False
     token = request.headers.get("Authorization")
     if token:
         token = token[7:] #Eliminar "Bearer" del string
         if validar_token(token, uid):
             #Caso en el que se tengan permisos para listar los documentos privados
-            authorized = true
+            authorized = True
 
-    ficheros = listar_ficheros(uid, true)
+    ficheros = listar_ficheros(uid, True)
     for visibility in ficheros:
         if filename in ficheros[visibility]:
             path = Path('/file/',uid,'/',visibility,'/',filename)
@@ -110,7 +110,7 @@ Es necesario autenticarse con token para hacer esta acción.
 async def create_or_update(uid,filename):
     #TODO: falta implementar el leer el contenido del fichero a crear/cambiar desde el json introducido
     #Uid correcto?    
-    if not comprobar_uid(uid)
+    if not comprobar_uid(uid):
         return jsonify({'error':'El uid introducido no existe o no es un directorio'}),404
     
     #Para subir ficheros será necesario autenticarse
@@ -119,24 +119,24 @@ async def create_or_update(uid,filename):
         return jsonify({'error':'La petición debe tener un token de autenticación en la cabecera'}), 400
     
     token = token[7:] #Eliminar "Bearer" del string
-    if not validar_token(token, uid)
+    if not validar_token(token, uid):
         return jsonify({'error': 'Autenticación fallida. Revisa el uid o el token introducidos'}), 401
 
     #Para crear o actualizar los ficheros se va a buscar
     #linealmente en los directorios. Primero en público, donde si lo encuentra, lo reemplaza
     #y luego en el privado, donde si no lo encuentra, lo crea
-    ficheros = listar_ficheros(uid, true)
+    ficheros = listar_ficheros(uid, True)
     for visibility in ficheros:
         if filename in ficheros[visibility]:
             path = Path('/file/',uid,'/',visibility,'/',filename)
             path.write_text(texto)
-            return jsonify('info': 'Recurso actualizado con éxito'), 201
+            return jsonify({'info': 'Recurso actualizado con éxito'}), 201
     
     #Si no encuentra el fichero, se crea en privado directamente
     path = Path('/file/',uid,'/private/',filename)
     path.touch()
     path.write_text(texto)
-    return jsonify('info',('Se ha creado un nuevo recurso ',filename,' en el directorio privado.'),201)
+    return jsonify({'info',('Se ha creado un nuevo recurso ',filename,' en el directorio privado.')}),201
 '''
 Función para gestionar las peticiones DELETE.
 Dada la ruta, un uid y un nombre de ficero, eliminará el fichero.
@@ -154,10 +154,10 @@ async def delete(uid, filename):
         return jsonify({'error':'La petición debe tener un token de autenticación en la cabecera'}), 400
     
     token = token[7:] #Eliminar "Bearer" del string
-    if not validar_token(token, uid)
+    if not validar_token(token, uid):
         return jsonify({'error': 'Autenticación fallida. Revisa el uid o el token introducidos'}), 401
 
-    ficheros = listar_ficheros(uid, true)
+    ficheros = listar_ficheros(uid, True)
     for visibility in ficheros:
         if filename in ficheros[visibility]:
             path = Path('/file/',uid,'/',visibility,'/',filename)
@@ -172,7 +172,7 @@ Dada la ruta, un uid y un nombre de ficero, Cambia la visibilidad del fichero a 
 Es necesario autenticarse con token para hacer esta acción.
 '''
 @app.patch('/file/<uid>/<filename>')
-async def delete(uid, filename):
+async def change_visibility(uid, filename):
     
     if not comprobar_uid(uid):
         return jsonify({'error':'El uid introducido no existe o no es un directorio'}),404
@@ -183,10 +183,10 @@ async def delete(uid, filename):
         return jsonify({'error':'La petición debe tener un token de autenticación en la cabecera'}), 400
     
     token = token[7:] #Eliminar "Bearer" del string
-    if not validar_token(token, uid)
+    if not validar_token(token, uid):
         return jsonify({'error': 'Autenticación fallida. Revisa el uid o el token introducidos'}), 401
 
-    ficheros = listar_ficheros(uid, true)
+    ficheros = listar_ficheros(uid, True)
     for visibility in ficheros:
         if filename in ficheros[visibility]:
             if visibility == 'public':
