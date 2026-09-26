@@ -20,10 +20,18 @@ def validar_token(token, uid) -> bool:
         return true
     return false
 
+'''
+Función que comprueba si una ruta a los archivos de un usuario (uid)
+'''
 def comprobar_uid(uid: str) -> bool:
     path = Path('/file/',uid)
     return path.exists()
 
+'''
+Función que lista, dado un uid, los ficheros de ese usuario. Permite listar 
+los privados y públicos o sólo los públicados en base al valor de la flag "private"
+No comprueba si el path con ese uid existe o no
+'''
 def listar_ficheros(uid : str, private = false):
     file_list = {}
 
@@ -39,6 +47,12 @@ def listar_ficheros(uid : str, private = false):
     return file_list
 
 
+'''
+Función para gestionar las peticiones GET.
+Dada la ruta y un uid, lista los ficheros públicos del uid, si existe.
+Se puede agregar la cabecera de autenticación con token para listar los ficheros privados
+si dicho token es correcto.
+'''
 @app.get('/file/<uid>')
 async def list_documents(uid):
 
@@ -58,6 +72,13 @@ async def list_documents(uid):
     #Respuesta del servidor si no tiene permisos de listar privados
     return jsonify(listar_ficheros(uid, authorized)), 200
 
+
+'''
+Función para gestionar las peticiones PUT.
+Dada la ruta, un uid y un nombre de ficero, Cambia el contenido del fichero al recibido en el JSON adjunto.
+Si el fichero no existe, lo crea con el contenido.
+Es necesario autenticarse con token para hacer esta acción.
+'''
 @app.put('/file/<uid>/<filename>')
 async def create_or_update(uid,filename):
     #TODO: falta implementar el leer el contenido del fichero a crear/cambiar desde el json introducido
