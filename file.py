@@ -1,7 +1,5 @@
 from quart import Quart, jsonify, request
 import uuid
-import hashlib
-from datetime import datetime, timedelta
 from pathlib import Path
 app = Quart(__name__)
 
@@ -62,7 +60,7 @@ a peticiones
 '''
 def autenticar(uid: str):
     token = request.headers.get("Authorization")
-    if if not token or not token.startswith("Bearer "):
+    if not token or not token.startswith("Bearer "):
         return False
     if token:
         token = token[7:] #Eliminar "Bearer" del string
