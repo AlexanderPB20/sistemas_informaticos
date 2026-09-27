@@ -36,14 +36,20 @@ No comprueba si el path con ese uid existe o no
 def listar_ficheros(uid : str, private = False):
     file_list = {}
 
-    path = Path('./file/',uid,'/public/')
-    files_found = [file.name for file in path.iterdir() if file.is_file()]
-    file_list['public'] = files_found
-
+    public_path = Path('./file/',uid,'/public/')
+    if public_path.exists():
+        files_found = [file.name for file in public_path.iterdir() if file.is_file()]
+        file_list['public'] = files_found
+    else:
+        file_list['public'] = []
+    
     if private:
-        path = Path('./file/',uid,'/private/')
-        files_found = [file.name for file in path.iterdir() if file.is_file()]
-        file_list['private'] = files_found
+        private_path = Path('./file/',uid,'/private/')
+        if private_path.exists():
+            files_found = [file.name for file in private_path.iterdir() if file.is_file()]
+            file_list['private'] = files_found
+    else:
+        file_list['private'] = []
     
     return file_list
 
