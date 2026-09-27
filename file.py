@@ -64,7 +64,7 @@ def autenticar(uid: str):
         return False
     if token:
         token = token[7:] #Eliminar "Bearer" del string
-        return validar_token(token, uid):
+        return validar_token(token, uid)
 '''
 Función para gestionar las peticiones GET.
 Dada la ruta y un uid, lista los ficheros públicos del uid, si existe.
