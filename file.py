@@ -53,7 +53,20 @@ def listar_ficheros(uid : str, private = False):
     
     return file_list
 
+'''
+Función que hace el proceso de tomar la cabecera de la petición,
+revisar si la autenticación empieza por "Bearer" y validar el token recibido
 
+La función se ha creado con propósito de limpiar el código de las funciones de respuesta
+a peticiones
+'''
+def autenticar(uid: str):
+    token = request.headers.get("Authorization")
+    if if not token or not token.startswith("Bearer "):
+        return False
+    if token:
+        token = token[7:] #Eliminar "Bearer" del string
+        return validar_token(token, uid):
 '''
 Función para gestionar las peticiones GET.
 Dada la ruta y un uid, lista los ficheros públicos del uid, si existe.
@@ -68,13 +81,7 @@ async def list_documents(uid):
     
     #Comprobar si se ha añadido cabecera con token para
     #mostrar tanto los públicos como los ocultos
-    authorized = False
-    token = request.headers.get("Authorization")
-    if token:
-        token = token[7:] #Eliminar "Bearer" del string
-        if validar_token(token, uid):
-            #Caso en el que se tengan permisos para listar los documentos privados
-            authorized = True
+    authorized = autenticar(uid)
 
     #Respuesta del servidor si no tiene permisos de listar privados
     return jsonify(listar_ficheros(uid, authorized)), 200
@@ -92,13 +99,7 @@ async def get_content(uid, filename):
     
     #Comprobar si se ha añadido cabecera con token para
     #buscar tanto en los públicos como los ocultos
-    authorized = False
-    token = request.headers.get("Authorization")
-    if token:
-        token = token[7:] #Eliminar "Bearer" del string
-        if validar_token(token, uid):
-            #Caso en el que se tengan permisos para listar los documentos privados
-            authorized = True
+    authorized = autenticar(uid)
 
     ficheros = listar_ficheros(uid, authorized)
     for visibility in ficheros:
@@ -116,7 +117,7 @@ Es necesario autenticarse con token para hacer esta acción.
 @app.put('/file/<uid>/<filename>')
 async def create_or_update(uid,filename):
     datos = await request.get_json()
-    if not datos or not datos['content']:
+    if not datos or 'content' not in datos:
         return jsonify({'error':'El JSON no contiene el campo "content"'}), 400
     
     texto = datos['content']
@@ -129,8 +130,7 @@ async def create_or_update(uid,filename):
     if not token:
         return jsonify({'error':'La petición debe tener un token de autenticación en la cabecera'}), 400
     
-    token = token[7:] #Eliminar "Bearer" del string
-    if not validar_token(token, uid):
+    if not autenticar(uid):
         return jsonify({'error': 'Autenticación fallida. Revisa el uid o el token introducidos'}), 401
 
     #Para crear o actualizar los ficheros se va a buscar
@@ -164,8 +164,7 @@ async def delete(uid, filename):
     if not token:
         return jsonify({'error':'La petición debe tener un token de autenticación en la cabecera'}), 400
     
-    token = token[7:] #Eliminar "Bearer" del string
-    if not validar_token(token, uid):
+    if not autenticar(uid):
         return jsonify({'error': 'Autenticación fallida. Revisa el uid o el token introducidos'}), 401
 
     ficheros = listar_ficheros(uid, True)
@@ -193,8 +192,7 @@ async def change_visibility(uid, filename):
     if not token:
         return jsonify({'error':'La petición debe tener un token de autenticación en la cabecera'}), 400
     
-    token = token[7:] #Eliminar "Bearer" del string
-    if not validar_token(token, uid):
+    if not autenticar(uid):
         return jsonify({'error': 'Autenticación fallida. Revisa el uid o el token introducidos'}), 401
 
     ficheros = listar_ficheros(uid, True)
