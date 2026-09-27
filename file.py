@@ -147,7 +147,7 @@ async def create_or_update(uid,filename):
     path = Path('./file/',uid,'/private/',filename)
     path.touch()
     path.write_text(texto)
-    return jsonify({'info',('Se ha creado un nuevo recurso {filename} en el directorio privado.')}),201
+    return jsonify({'info',f'Se ha creado un nuevo recurso {filename} en el directorio privado.'}),201
 '''
 Función para gestionar las peticiones DELETE.
 Dada la ruta, un uid y un nombre de ficero, eliminará el fichero.
@@ -172,7 +172,7 @@ async def delete(uid, filename):
         if filename in ficheros[visibility]:
             path = Path('./file/',uid,'/',visibility,'/',filename)
             path.unlink()
-            return jsonify({'info':('Fichero {filename} eliminado')}),200
+            return jsonify({'info':f'Fichero {filename} eliminado'}),200
 
     return jsonify({'error':'Fichero no encontrado'}),404
 
@@ -204,7 +204,7 @@ async def change_visibility(uid, filename):
                 return jsonify({'info': 'El fichero ya es público'}), 200 
             path = Path('./file/',uid,'/private/',filename)
             path.move('./file/',uid,'/public/',filename)
-            return jsonify({'info':('Fichero {filename} establecido como público')}),200
+            return jsonify({'info':f'Fichero {filename} establecido como público'}),200
 
     return jsonify({'error':'Fichero no encontrado'}),404
 
