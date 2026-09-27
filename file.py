@@ -109,8 +109,12 @@ Es necesario autenticarse con token para hacer esta acción.
 '''
 @app.put('/file/<uid>/<filename>')
 async def create_or_update(uid,filename):
-    #TODO: falta implementar el leer el contenido del fichero a crear/cambiar desde el json introducido
-    #Uid correcto?    
+    datos = await request.get_json()
+    if not datos or not datos['content']:
+        return jsonify({'error':'El JSON no contiene el campo "content"'}), 400
+    
+    texto = datos['content']
+    #Uid correcto?
     if not comprobar_uid(uid):
         return jsonify({'error':'El uid introducido no existe o no es un directorio'}),404
     
