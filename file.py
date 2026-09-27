@@ -17,7 +17,7 @@ El token debe ser solo la cadena con el mismo (sin incluir "bearer")
 '''
 def validar_token(token, uid) -> bool:
     hashed_token = uuid.uuid5(server_secret, uid)
-    if hashed_token == token:
+    if hashed_token == uuid.UUID(token):
         return True
     return False
 
@@ -94,7 +94,7 @@ async def get_content(uid, filename):
             #Caso en el que se tengan permisos para listar los documentos privados
             authorized = True
 
-    ficheros = listar_ficheros(uid, True)
+    ficheros = listar_ficheros(uid, authorized)
     for visibility in ficheros:
         if filename in ficheros[visibility]:
             path = Path('./file/',uid,'/',visibility,'/',filename)
