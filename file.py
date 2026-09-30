@@ -23,7 +23,7 @@ def validar_token(token, uid) -> bool:
 Función que comprueba si una ruta a los archivos de un usuario (uid)
 '''
 def comprobar_uid(uid: str) -> bool:
-    path = Path('./file/',uid)
+    path = Path(f'./file/{uid}')
     return path.exists()
 
 '''
@@ -32,22 +32,21 @@ los privados y públicos o sólo los públicados en base al valor de la flag "pr
 No comprueba si el path con ese uid existe o no
 '''
 def listar_ficheros(uid : str, private = False):
-    file_list = {}
+    file_list = {
+        "public": [],
+        "private": []
+    }
 
-    public_path = Path('./file/',uid,'/public/')
+    public_path = Path(f'./file/'{uid}'/public/')
     if public_path.exists():
         files_found = [file.name for file in public_path.iterdir() if file.is_file()]
         file_list['public'] = files_found
-    else:
-        file_list['public'] = []
     
     if private:
-        private_path = Path('./file/',uid,'/private/')
+        private_path = Path(f'./file/{uid}/private/')
         if private_path.exists():
             files_found = [file.name for file in private_path.iterdir() if file.is_file()]
             file_list['private'] = files_found
-    else:
-        file_list['private'] = []
     
     return file_list
 
@@ -102,7 +101,7 @@ async def get_content(uid, filename):
     ficheros = listar_ficheros(uid, authorized)
     for visibility in ficheros:
         if filename in ficheros[visibility]:
-            path = Path('./file/',uid,'/',visibility,'/',filename)
+            path = Path(f'./file/{uid}/{visibility}/{filename}')
             return jsonify({'content': path.read_text()}),200
 
     return jsonify({'error':'Fichero no encontrado'}),404
@@ -137,15 +136,15 @@ async def create_or_update(uid,filename):
     ficheros = listar_ficheros(uid, True)
     for visibility in ficheros:
         if filename in ficheros[visibility]:
-            path = Path('./file/',uid,'/',visibility,'/',filename)
+            path = Path(f'./file/{uid}/{visibility}/{filename}')
             path.write_text(texto)
             return jsonify({'info': 'Recurso actualizado con éxito'}), 201
     
     #Si no encuentra el fichero, se crea en privado directamente
-    path = Path('./file/',uid,'/private/',filename)
+    path = Path(f'./file/{uid}/private/{filename}')
     path.touch()
     path.write_text(texto)
-    return jsonify({'info',f'Se ha creado un nuevo recurso {filename} en el directorio privado.'}),201
+    return jsonify({'info' : f'Se ha creado un nuevo recurso {filename} en el directorio privado.'}),201
 '''
 Función para gestionar las peticiones DELETE.
 Dada la ruta, un uid y un nombre de ficero, eliminará el fichero.
@@ -168,7 +167,7 @@ async def delete(uid, filename):
     ficheros = listar_ficheros(uid, True)
     for visibility in ficheros:
         if filename in ficheros[visibility]:
-            path = Path('./file/',uid,'/',visibility,'/',filename)
+            path = Path(f'./file/{uid}/{visibility}/{filename}')
             path.unlink()
             return jsonify({'info':f'Fichero {filename} eliminado'}),200
 
@@ -200,7 +199,7 @@ async def change_visibility(uid, filename):
                 #Nota: Decidimos contar este caso como éxito. La petición es para cambiar el fichero a público, y al gestionar
                 # dicha petición, el fichero acaba (o sigue, en este caso) siéndolo.
                 return jsonify({'info': 'El fichero ya es público'}), 200 
-            path = Path('./file/',uid,'/private/',filename)
+            path = Path(f'./file/{uid}/private/{filename}')
             path.rename(f"./file/{uid}/public/{filename}")
             return jsonify({'info':f'Fichero {filename} establecido como público'}),200
 
