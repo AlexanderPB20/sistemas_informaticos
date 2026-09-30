@@ -141,6 +141,8 @@ async def create_or_update(uid,filename):
             return jsonify({'info': 'Recurso actualizado con éxito'}), 201
     
     #Si no encuentra el fichero, se crea en privado directamente
+    path = Path(f'./file/{uid}/private')
+    path.mkdir(exist_ok=True)
     path = Path(f'./file/{uid}/private/{filename}')
     path.touch()
     path.write_text(texto)
@@ -199,6 +201,8 @@ async def change_visibility(uid, filename):
                 #Nota: Decidimos contar este caso como éxito. La petición es para cambiar el fichero a público, y al gestionar
                 # dicha petición, el fichero acaba (o sigue, en este caso) siéndolo.
                 return jsonify({'info': 'El fichero ya es público'}), 200 
+            path = Path(f'./file/{uid}/public')
+            path.mkdir(exist_ok=True)
             path = Path(f'./file/{uid}/private/{filename}')
             path.rename(f"./file/{uid}/public/{filename}")
             return jsonify({'info':f'Fichero {filename} establecido como público'}),200
