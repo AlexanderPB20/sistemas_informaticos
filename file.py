@@ -201,7 +201,7 @@ async def change_visibility(uid, filename):
                 # dicha petición, el fichero acaba (o sigue, en este caso) siéndolo.
                 return jsonify({'info': 'El fichero ya es público'}), 200 
             path = Path('./file/',uid,'/private/',filename)
-            path.move('./file/',uid,'/public/',filename)
+            path.rename(f"./file/{uid}/public/{filename}")
             return jsonify({'info':f'Fichero {filename} establecido como público'}),200
 
     return jsonify({'error':'Fichero no encontrado'}),404
