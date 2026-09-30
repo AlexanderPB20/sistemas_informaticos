@@ -9,7 +9,9 @@ app = Quart(__name__)
 Almacenamiento de usuarios y contraseñas
 En un entorno real, se usaría una conexión a una base de datos
 '''
-server_secret = uuid.uuid4() #uid único del servidor
+with open("server_secret.txt") as file:
+    server_secret = next(file).strip()
+    server_secret = uuid.UUID(server_secret)
 users = {}
 tokens = {}
 
@@ -74,11 +76,38 @@ async def create_user():
 
 
 
-
+'''
+Función para gestionar las peticiones POST.
+Toma el usuario y contraseña introducido en le JSON de la cabecera y los valida.
+Cuando es válido, devuelve un token
+'''
 @app.post('/user')
-async def login(name: str):
-    #Login code goes here
-    return jsonify.loads(name)
+async def login():
+    datos = await request.get_json()
+    if not datos:
+        #Si no llega un json en la request
+        return jsonify({'error':'No se ha recibido JSON'}), 400
+    if not datos.get('name') or not datos.get('password'):
+        #Si falta algún campo en el json
+        return jsonify({'error':'El JSON recibido debe contener campos name (usuario) y password (contraseña)'}), 400
+    
+    username = datos.get('name')
+    password = datos.get('password')
+    hashedpassword = hash256(password)
+
+    #Buscamos por cada uid
+    for uid in users:
+
+        #Coincide usuario
+        if users[uid]['user'] == username:
+            #Coincide contraseña y generamos token
+            if users[uid]['password'] == hashedpassword:
+                stringified_uid = str(uid)
+                token = generate_token(stringified_uid)
+                return jsonify({"token":token, "uid": uid}), 200
+    
+    #No encontrado
+    return jsonify({'error':'Usuario o contraseña incorrectos'}), 404
 
 '''
 Función para gestionar las peticiones PATCH.
@@ -114,5 +143,3 @@ async def modify():
 
 if __name__ == '__main__':
     app.run(host='localhost', port=5050)
-
-

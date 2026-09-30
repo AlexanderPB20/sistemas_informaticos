@@ -1,0 +1,22 @@
+version: "1.0"
+services:
+	user_api:
+		build:
+			context: .
+			dockerfile: Dockerfile
+			network: host
+		ports: 
+			- "5050:5050"
+		command: python3 user.py
+		volumes:
+			- ./:/app
+	file_api:
+		build:
+			context: .
+			dockerfile: Dockerfile
+			network: host
+		ports: 
+			- "5051:5051"
+		command: python3 file.py
+		volumes:
+			- ./:/app
