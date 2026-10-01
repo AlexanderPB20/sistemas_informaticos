@@ -118,10 +118,10 @@ Cuando es válido, cambia la contraseña del usuario del token por la introducid
 async def modify():
     #Primero se verifica si el token es válido antes de nada
     token = request.headers.get("Authorization")
-    token = token[7:] #Eliminar "Bearer" del string
     if not token or token not in tokens.keys():
         #Si no hay cabecera con el token o no existe en los guardados
         return jsonify({'error':'No hay token en la cabecera de la petición o es inválido'}), 400
+    token = token[7:] #Eliminar "Bearer" del string
     
     #Luego verificamos si ha introducido contraseña
     datos = await request.get_json()
