@@ -6,8 +6,12 @@ FILE_ADDRESS = "http://127.0.0.1:5051/file"
 USER = "Usuario_prueba"
 PASSWORD = "password_prueba"
 NEW_PASWORD = "password_nueva"
+FILENAME = "ejemplo1.txt"
+FILE_CONTENT = "En un lugar de la Mancha cuyo nombre no quiero acordarme"
+NEW_FILE_CONTENT = "Lorem ipsum dolor sit amet"
 
-
+passed = 0
+not_passed = 0
 test = 1
 def probar_respuesta(codigo_esperado, nombre_test, codigo_obtenido, mensaje_servidor):
     global test
@@ -41,7 +45,9 @@ respuesta = requests.put(
     json={"name":USER,"password":PASSWORD})
 
 if not probar_respuesta(201, "Usuario nuevo correcto", respuesta.status_code, respuesta.json()):
-    exit
+    not_passed+=1
+else:
+    passed += 1
 
 uid = respuesta.json()['uid']
 token = respuesta.json()['token']
@@ -52,7 +58,9 @@ respuesta = requests.put(
     USER_ADDRESS)
 
 if not probar_respuesta(400, "Usuario nuevo no json", respuesta.status_code, respuesta.json()):
-    exit
+    not_passed+=1
+else:
+    passed += 1
 
 
 # 3. Creación de usuario ERROR json mal formulado
@@ -61,7 +69,9 @@ respuesta = requests.put(
     json={"malformado":"malformado"})
 
 if not probar_respuesta(400, "Usuario nuevo json mal formulado", respuesta.status_code, respuesta.json()):
-    exit
+    not_passed+=1
+else:
+    passed += 1
 
 #######################################
 #   USER POST
@@ -72,7 +82,9 @@ respuesta = requests.post(
     json={"name":USER, "password":PASSWORD})
 
 if not probar_respuesta(200, "Login correcto", respuesta.status_code, respuesta.json()):
-    exit
+    not_passed+=1
+else:
+    passed += 1
 
 # 5. Login ERROR datos incorrectos
 respuesta = requests.post(
@@ -80,7 +92,9 @@ respuesta = requests.post(
     json={"name":"notfound", "password":"fakepassword"})
 
 if not probar_respuesta(404, "Login credenciales incorrectas", respuesta.status_code, respuesta.json()):
-    exit
+    not_passed+=1
+else:
+    passed += 1
 
 #######################################
 #   USER PATCH
@@ -93,7 +107,9 @@ respuesta = requests.patch(
     json={"password":NEW_PASWORD})
 
 if not probar_respuesta(200, "Cambio de contraseña", respuesta.status_code, respuesta.json()):
-    exit
+    not_passed+=1
+else:
+    passed += 1
 
 # 7. Cambio de contraseña efectivo OK
 respuesta = requests.post(
@@ -101,7 +117,9 @@ respuesta = requests.post(
     json={"name":USER, "password":NEW_PASWORD})
 
 if not probar_respuesta(200, "Login correcto tras cambio de contraseña", respuesta.status_code, respuesta.json()):
-    exit
+    not_passed+=1
+else:
+    passed += 1
 
 # 8. Token incorrecto ERROR
 respuesta = requests.patch(
@@ -110,7 +128,9 @@ respuesta = requests.patch(
     json={"password":PASSWORD})
 
 if not probar_respuesta(400, "Token incorrecto en cambio de contraseña", respuesta.status_code, respuesta.json()):
-    exit
+    not_passed+=1
+else:
+    passed += 1
 
 
 # 9. Cabecera incompleta ERROR
@@ -119,10 +139,28 @@ respuesta = requests.patch(
     json={"password":PASSWORD})
 
 if not probar_respuesta(400, "Cabecera incompleta", respuesta.status_code, respuesta.json()):
-    exit
+    not_passed+=1
+else:
+    passed += 1
 
 
 #######################################
-#   FILE PATCH
+#   FILE PUT
 #######################################
 
+# 10. Crear fichero OK
+respuesta = requests.put(
+    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
+    headers={"authorization":f"Bearer {token}"},
+    json={"content":FILE_CONTENT})
+
+if not probar_respuesta(201, "Crear fichero correcto", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+
+
+print("##################################")
+print(f"Resumen de pruebas: {passed}/{passed+not_passed} SUPERADAS")
+print("##################################")
