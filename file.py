@@ -6,7 +6,8 @@ app = Quart(__name__)
 with open("server_secret.txt") as file:
     server_secret = next(file).strip()
     server_secret = uuid.UUID(server_secret)
-
+path = Path(f'./file/')
+path.mkdir(exist_ok=True)
 
 '''
 Función comprueba que un token coincide con un uid.
@@ -37,7 +38,7 @@ def listar_ficheros(uid : str, private = False):
         "private": []
     }
 
-    public_path = Path(f'./file/'{uid}'/public/')
+    public_path = Path(f'./file/{uid}/public/')
     if public_path.exists():
         files_found = [file.name for file in public_path.iterdir() if file.is_file()]
         file_list['public'] = files_found
@@ -119,9 +120,9 @@ async def create_or_update(uid,filename):
     
     texto = datos['content']
     #Uid correcto?
-    if not comprobar_uid(uid):
-        return jsonify({'error':'El uid introducido no existe o no es un directorio'}),404
-    
+    #if not comprobar_uid(uid):
+    #    return jsonify({'error':'El uid introducido no existe o no es un directorio'}),404
+
     #Para subir ficheros será necesario autenticarse
     token = request.headers.get("Authorization")
     if not token:
@@ -141,10 +142,11 @@ async def create_or_update(uid,filename):
             return jsonify({'info': 'Recurso actualizado con éxito'}), 201
     
     #Si no encuentra el fichero, se crea en privado directamente
+    path = Path(f'./file/{uid}')
+    path.mkdir(exist_ok=True)
     path = Path(f'./file/{uid}/private')
     path.mkdir(exist_ok=True)
     path = Path(f'./file/{uid}/private/{filename}')
-    path.touch()
     path.write_text(texto)
     return jsonify({'info' : f'Se ha creado un nuevo recurso {filename} en el directorio privado.'}),201
 '''
