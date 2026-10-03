@@ -198,11 +198,11 @@ respuesta = requests.put(
     json={"content":FILE_CONTENT})
 '''
 TODO: modificar file.py para admitir tokens mal formados
+'''
 if not probar_respuesta(403, "Crear fichero autenticacion incorrecta", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
     passed += 1
-'''
 
 # 15. Crear fichero ERROR uid incorrecto
 respuesta = requests.put(
@@ -272,6 +272,99 @@ if not probar_respuesta(200, "Cambiar fichero a público con uno ya existente co
 else:
     passed += 1
 
+#######################################
+#   FILE GET
+#######################################
+# 20. Obtener lista de ficheros publicos OK
+respuesta = requests.get(
+    f"{FILE_ADDRESS}/{uid}")
+
+
+if not probar_respuesta(200, "Listar ficheros públicos", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 21. Listar ficheros privados OK
+# Fichero nuevo en privado
+respuesta = requests.put(
+    f"{FILE_ADDRESS}/{uid}/privado.txt",
+    headers={"authorization":f"Bearer {token}"},
+    json={"content":NEW_FILE_CONTENT})
+# Cambio este nuevo a público
+respuesta = requests.get(
+    f"{FILE_ADDRESS}/{uid}",
+    headers={"authorization":f"Bearer {token}"}
+    )
+
+if not probar_respuesta(200, "Obtener ficheros públicos y privados", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 22. Obtener contenido de un fichero público OK
+respuesta = requests.get(
+    f"{FILE_ADDRESS}/{uid}/{FILENAME}")
+
+if not probar_respuesta(200, "Contenido de un fichero público", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+
+# 23. Obtener contenido de un fichero privado OK
+respuesta = requests.get(
+    f"{FILE_ADDRESS}/{uid}/privado.txt",
+    headers={"authorization":f"Bearer {token}"})
+
+if not probar_respuesta(200, "Obtener contenido de fichero privado", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 24. Listar ficheros con token incorrecto ERROR (devuelve públicos)
+# Fichero nuevo en privado
+respuesta = requests.get(
+    f"{FILE_ADDRESS}/{uid}",
+    headers={"authorization":f"Bearer 113123213123123"})
+
+if not probar_respuesta(200, "Intentar listar ficheros con token erroneo", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 25. Listar documentos de un uid inexistente ERROR
+respuesta = requests.get(
+    f"{FILE_ADDRESS}/3421221")
+
+if not probar_respuesta(404, "Intentar listar ficheros con UID erroneo", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 26. Obtener contenido de un fichero privado sin autenticacion ERROR
+respuesta = requests.get(
+    f"{FILE_ADDRESS}/{uid}/privado.txt")
+
+if not probar_respuesta(404, "Obtener contenido de un fichero privado sin token", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 27. Obtener contenido de un fichero inexistente ERROr
+respuesta = requests.get(
+    f"{FILE_ADDRESS}/{uid}/noexisto.pdf",
+    headers={"authorization":f"Bearer {token}"})
+
+if not probar_respuesta(404, "Intentar obtenre contenido de fichero inexistente", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+
+#######################################
+#   FILE DELETE
+#######################################
 
 print("##################################")
 print(f"Resumen de pruebas: {passed}/{passed+not_passed} SUPERADAS")
