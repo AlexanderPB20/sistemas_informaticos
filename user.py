@@ -35,20 +35,14 @@ def hash256(data: str) -> str:
 
 
 
-
-
-
-
 '''
 Función para gestionar las peticiones PUT.
 Guarda un usuario nuevo en la "base de datos" tomando el nombre de usuario
 y password especificados en el JSON junto a la petición
 '''
-# curl -X PUT "http://127.0.0.1:5050/user" -H "Content-Type: application/json" -d '{"name":"felipe","password":"mypassword"}'
-# -H "Authorization: Bearer [token]"
+
 @app.put('/user')
 async def create_user():
-    #Tomado de: https://mojoauth.com/parse-and-generate-formats/parse-and-generate-json-with-quart#handling-incoming-json-requests
     datos = await request.get_json()
     if not datos:
         #Si no llega un json en la request
