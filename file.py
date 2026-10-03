@@ -16,8 +16,11 @@ El token debe ser solo la cadena con el mismo (sin incluir "bearer")
 '''
 def validar_token(token, uid) -> bool:
     hashed_token = uuid.uuid5(server_secret, uid)
-    if hashed_token == uuid.UUID(token):
-        return True
+    try:
+        if hashed_token == uuid.UUID(token):
+            return True
+    except ValueError:
+        return False
     return False
 
 '''
