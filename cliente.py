@@ -159,6 +159,118 @@ if not probar_respuesta(201, "Crear fichero correcto", respuesta.status_code, re
 else:
     passed += 1
 
+# 11. Actualizar contenido de fichero OK
+respuesta = requests.put(
+    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
+    headers={"authorization":f"Bearer {token}"},
+    json={"content":NEW_FILE_CONTENT})
+
+if not probar_respuesta(201, "Actualizar contenido correcto", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 12. Crear fichero ERROR no content
+respuesta = requests.put(
+    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
+    headers={"authorization":f"Bearer {token}"},
+    json={"malaCabecera":FILE_CONTENT})
+
+if not probar_respuesta(400, "Crear fichero cabecera erronea", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 13. Crear fichero ERROR sin autenticar
+respuesta = requests.put(
+    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
+    json={"content":FILE_CONTENT})
+
+if not probar_respuesta(400, "Crear fichero sin autenticacion", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 14. Crear fichero ERROR token incorrecto
+respuesta = requests.put(
+    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
+    headers={"authorization":f"Bearer 123123-123123"},
+    json={"content":FILE_CONTENT})
+'''
+TODO: modificar file.py para admitir tokens mal formados
+if not probar_respuesta(403, "Crear fichero autenticacion incorrecta", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+'''
+
+# 15. Crear fichero ERROR uid incorrecto
+respuesta = requests.put(
+    f"{FILE_ADDRESS}/nombrefalso/{FILENAME}",
+    headers={"authorization":f"Bearer {token}"},
+    json={"content":FILE_CONTENT})
+
+if not probar_respuesta(403, "Crear fichero nombre erroneo", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+#######################################
+#   FILE PATCH
+#######################################
+
+# 16. Cambiar visibilidad a un fichero OK
+
+respuesta = requests.patch(
+    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
+    headers={"authorization":f"Bearer {token}"}
+    )
+
+if not probar_respuesta(200, "Cambiar fichero a público", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 17. Cambiar visibilidad a un fichero que ya es público OK
+
+respuesta = requests.patch(
+    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
+    headers={"authorization":f"Bearer {token}"}
+    )
+
+if not probar_respuesta(200, "Cambiar fichero público de nuevo a público", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 18. Cambiar visibilidad a un fichero ERROR fichero inexistente
+
+respuesta = requests.patch(
+    f"{FILE_ADDRESS}/{uid}/ficheroquenoesta.txt",
+    headers={"authorization":f"Bearer {token}"}
+    )
+
+if not probar_respuesta(404, "Cambiar fichero inexistente a público", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 19. Cambiar visibilidad a un fichero cuyo nombre ya existía en público ERROR
+# Fichero nuevo en privado
+respuesta = requests.put(
+    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
+    headers={"authorization":f"Bearer {token}"},
+    json={"content":NEW_FILE_CONTENT})
+# Cambio este nuevo a público
+respuesta = requests.patch(
+    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
+    headers={"authorization":f"Bearer {token}"}
+    )
+
+if not probar_respuesta(200, "Cambiar fichero a público con uno ya existente con el mismo nombre", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
 
 
 print("##################################")
