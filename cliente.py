@@ -196,9 +196,8 @@ respuesta = requests.put(
     f"{FILE_ADDRESS}/{uid}/{FILENAME}",
     headers={"authorization":f"Bearer 123123-123123"},
     json={"content":FILE_CONTENT})
-'''
-TODO: modificar file.py para admitir tokens mal formados
-'''
+
+
 if not probar_respuesta(403, "Crear fichero autenticacion incorrecta", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
@@ -356,7 +355,7 @@ respuesta = requests.get(
     f"{FILE_ADDRESS}/{uid}/noexisto.pdf",
     headers={"authorization":f"Bearer {token}"})
 
-if not probar_respuesta(404, "Intentar obtenre contenido de fichero inexistente", respuesta.status_code, respuesta.json()):
+if not probar_respuesta(404, "Intentar obtener contenido de fichero inexistente", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
     passed += 1
@@ -366,6 +365,38 @@ else:
 #   FILE DELETE
 #######################################
 
+# 28. Borrar fichero OK
+# Sólo una prueba de borrar fichero, puesto que en 
+# público y privado es igual y siempre hace falta 
+# autenticarse
+respuesta = requests.delete(
+    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
+    headers={"authorization":f"Bearer {token}"})
+
+if not probar_respuesta(200, "Borrar fichero", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 29. Borrar fichero inexistente ERROR
+respuesta = requests.delete(
+    f"{FILE_ADDRESS}/{uid}/noexistente.csv",
+    headers={"authorization":f"Bearer {token}"})
+
+if not probar_respuesta(404, "Borrar fichero inexistente", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 30. Borrar usando uid incorrecto
+respuesta = requests.delete(
+    f"{FILE_ADDRESS}/UIDFALSO/{FILENAME}",
+    headers={"authorization":f"Bearer {token}"})
+
+if not probar_respuesta(404, "Borrar de un uid inexistente", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
 print("##################################")
 print(f"Resumen de pruebas: {passed}/{passed+not_passed} SUPERADAS")
 print("##################################")
