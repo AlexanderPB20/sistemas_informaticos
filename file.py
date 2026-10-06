@@ -211,4 +211,4 @@ async def change_visibility(uid, filename):
     return jsonify({'error':'Fichero no encontrado'}),404
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=5051)
+    app.run(host='0.0.0.0', port=5051)
