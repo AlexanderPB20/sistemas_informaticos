@@ -141,18 +141,27 @@ async def login():
     hashedpassword = hash256(password)
 
     #Buscamos por cada uid
-    for uid in users:
+    async with async_session as session:
+        result = await session.execute(
+            text(
+                """
+                SELECT "username", "password"
+                FROM user
+                WHERE "username" = :username and "password" = :password
+                RETURNING UUID
+                """
+            ),
+            {"username": username,
+             "password": hashedpassword},
+        )
 
-        #Coincide usuario
-        if users[uid]['user'] == username:
-            #Coincide contraseña y generamos token
-            if users[uid]['password'] == hashedpassword:
-                stringified_uid = str(uid)
-                token = generate_token(stringified_uid)
-                return jsonify({"token":token, "uid": uid}), 200
+        return result.scalar_one_or_none()
+    if result is None:
+        #No encontrado
+        return jsonify({'error':'Usuario o contraseña incorrectos'}), 404
     
-    #No encontrado
-    return jsonify({'error':'Usuario o contraseña incorrectos'}), 404
+    return jsonify({'uid':result,'token':generate_token(uid)}), 200
+
 
 '''
 Función para gestionar las peticiones PATCH.
