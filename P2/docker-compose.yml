@@ -1,0 +1,37 @@
+version: "3.3"
+services:
+  user_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host
+    ports: 
+      - "5050:5050"
+    command: python3 user.py
+    volumes:
+      - ./:/app
+  film_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host
+    ports: 
+      - "5051:5051"
+    command: python3 api.py
+    volumes:
+      - ./:/app
+  postgreDB:
+    image: postgres:16
+    enviornment:
+      POSTGRES_USER: alumnodb
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: si1
+    ports:
+      - "9999:5432"
+    command:
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sq1
+
+volumes:
+  postgres_data:
