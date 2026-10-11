@@ -6,7 +6,8 @@ app = Quart(__name__)
 with open("server_secret.txt") as file:
     server_secret = next(file).strip()
     server_secret = uuid.UUID(server_secret)
-
+path = Path(f'./file/')
+path.mkdir(parents=True,exist_ok=True)
 
 '''
 Función comprueba que un token coincide con un uid.
@@ -15,8 +16,11 @@ El token debe ser solo la cadena con el mismo (sin incluir "bearer")
 '''
 def validar_token(token, uid) -> bool:
     hashed_token = uuid.uuid5(server_secret, uid)
-    if hashed_token == uuid.UUID(token):
-        return True
+    try:
+        if hashed_token == uuid.UUID(token):
+            return True
+    except ValueError:
+        return False
     return False
 
 '''
@@ -37,7 +41,7 @@ def listar_ficheros(uid : str, private = False):
         "private": []
     }
 
-    public_path = Path(f'./file/'{uid}'/public/')
+    public_path = Path(f'./file/{uid}/public/')
     if public_path.exists():
         files_found = [file.name for file in public_path.iterdir() if file.is_file()]
         file_list['public'] = files_found
@@ -61,9 +65,8 @@ def autenticar(uid: str):
     token = request.headers.get("Authorization")
     if not token or not token.startswith("Bearer "):
         return False
-    if token:
-        token = token[7:] #Eliminar "Bearer" del string
-        return validar_token(token, uid)
+    token = token[7:] #Eliminar "Bearer" del string
+    return validar_token(token, uid)
 '''
 Función para gestionar las peticiones GET.
 Dada la ruta y un uid, lista los ficheros públicos del uid, si existe.
@@ -119,16 +122,16 @@ async def create_or_update(uid,filename):
     
     texto = datos['content']
     #Uid correcto?
-    if not comprobar_uid(uid):
-        return jsonify({'error':'El uid introducido no existe o no es un directorio'}),404
-    
+    #if not comprobar_uid(uid):
+    #    return jsonify({'error':'El uid introducido no existe o no es un directorio'}),404
+
     #Para subir ficheros será necesario autenticarse
     token = request.headers.get("Authorization")
     if not token:
         return jsonify({'error':'La petición debe tener un token de autenticación en la cabecera'}), 400
     
     if not autenticar(uid):
-        return jsonify({'error': 'Autenticación fallida. Revisa el uid o el token introducidos'}), 401
+        return jsonify({'error': 'Autenticación fallida. Revisa el uid o el token introducidos'}), 403
 
     #Para crear o actualizar los ficheros se va a buscar
     #linealmente en los directorios. Primero en público, donde si lo encuentra, lo reemplaza
@@ -141,10 +144,8 @@ async def create_or_update(uid,filename):
             return jsonify({'info': 'Recurso actualizado con éxito'}), 201
     
     #Si no encuentra el fichero, se crea en privado directamente
-    path = Path(f'./file/{uid}/private')
-    path.mkdir(exist_ok=True)
     path = Path(f'./file/{uid}/private/{filename}')
-    path.touch()
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(texto)
     return jsonify({'info' : f'Se ha creado un nuevo recurso {filename} en el directorio privado.'}),201
 '''
@@ -202,7 +203,7 @@ async def change_visibility(uid, filename):
                 # dicha petición, el fichero acaba (o sigue, en este caso) siéndolo.
                 return jsonify({'info': 'El fichero ya es público'}), 200 
             path = Path(f'./file/{uid}/public')
-            path.mkdir(exist_ok=True)
+            path.mkdir(parents=True,exist_ok=True)
             path = Path(f'./file/{uid}/private/{filename}')
             path.rename(f"./file/{uid}/public/{filename}")
             return jsonify({'info':f'Fichero {filename} establecido como público'}),200
@@ -210,4 +211,4 @@ async def change_visibility(uid, filename):
     return jsonify({'error':'Fichero no encontrado'}),404
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=5051)
+    app.run(host='0.0.0.0', port=5051)

@@ -35,20 +35,14 @@ def hash256(data: str) -> str:
 
 
 
-
-
-
-
 '''
 Función para gestionar las peticiones PUT.
 Guarda un usuario nuevo en la "base de datos" tomando el nombre de usuario
 y password especificados en el JSON junto a la petición
 '''
-# curl -X PUT "http://127.0.0.1:5050/user" -H "Content-Type: application/json" -d '{"name":"felipe","password":"mypassword"}'
-# -H "Authorization: Bearer [token]"
+
 @app.put('/user')
 async def create_user():
-    #Tomado de: https://mojoauth.com/parse-and-generate-formats/parse-and-generate-json-with-quart#handling-incoming-json-requests
     datos = await request.get_json()
     if not datos:
         #Si no llega un json en la request
@@ -118,10 +112,12 @@ Cuando es válido, cambia la contraseña del usuario del token por la introducid
 async def modify():
     #Primero se verifica si el token es válido antes de nada
     token = request.headers.get("Authorization")
-    token = token[7:] #Eliminar "Bearer" del string
-    if not token or token not in tokens.keys():
+    if not token:
         #Si no hay cabecera con el token o no existe en los guardados
-        return jsonify({'error':'No hay token en la cabecera de la petición o es inválido'}), 400
+        return jsonify({'error':'No hay token en la cabecera de la petición'}), 400
+    token = token[7:] #Eliminar "Bearer" del string
+    if token not in tokens.keys():
+        return jsonify({'error':'Token inválido'}), 400
     
     #Luego verificamos si ha introducido contraseña
     datos = await request.get_json()
@@ -134,7 +130,6 @@ async def modify():
     #Comprobamos su expiración
     if tokens[token]["expiration"] < datetime.now():
         return jsonify({'error':'El token introducido expiró'}), 403
-    
 
     usuario_uid = tokens[token]["uid"]
     users[usuario_uid]["password"] = hash256(datos.get("password"))
@@ -142,4 +137,4 @@ async def modify():
     return jsonify({'response':'Password modificada correctamente'}), 200
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=5050)
+    app.run(host='0.0.0.0', port=5050)
