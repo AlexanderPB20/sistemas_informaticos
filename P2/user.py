@@ -19,7 +19,6 @@ En un entorno real, se usaría una conexión a una base de datos
 with open("server_secret.txt") as file:
     server_secret = next(file).strip()
     server_secret = uuid.UUID(server_secret)
-tokens = {}
 
 
 '''
@@ -29,8 +28,11 @@ junto al usuario al que pertenece y la hora de expiración
 '''
 def generate_token(uid: str):
     hashed_token = uuid.uuid5(server_secret, uid)
-    tokens[str(hashed_token)] = {"uid":uid}
     return hashed_token
+
+def validate_token(uid: str, token: str):
+    hashed_token = uuid.uuid5(server_secret, uid)
+    return str(hashed_token) == token
 
 #Función usada para hasheo de contraseñas y limpiar el código principal
 def hash256(data: str) -> str:
@@ -166,35 +168,48 @@ async def login():
 '''
 Función para gestionar las peticiones PATCH.
 Toma el token introducido en la cabecera de la petición y lo valida.
-Cuando es válido, cambia la contraseña del usuario del token por la introducida en el JSON
+Cuando es válido, permite al usuario aumentar el saldo de su cuenta
 '''
 @app.patch('/user')
 async def modify():
     #Primero se verifica si el token es válido antes de nada
     token = request.headers.get("Authorization")
-    if not token:
+    if not token or not token.startswith("Bearer "):
         #Si no hay cabecera con el token o no existe en los guardados
         return jsonify({'error':'No hay token en la cabecera de la petición'}), 400
     token = token[7:] #Eliminar "Bearer" del string
-    if token not in tokens.keys():
-        return jsonify({'error':'Token inválido'}), 400
     
     #Luego verificamos si ha introducido contraseña
     datos = await request.get_json()
     if not datos:
         return jsonify({"error":"No se ha recibido JSON"}), 400
-    if not datos.get('password'):
-        return jsonify({"error":"El JSON recibido no contiene el campo 'password' (contraseña)"}), 400
+    if not datos.get('uid') or not datos.get('balance'):
+        return jsonify({"error":"El JSON recibido debe contener los campos 'uid'(UUID) y 'balance' (saldo)"}), 400
 
+    if not datos.get('balance') > 0:
+        return jsonify({"error":"El saldo especificado debe ser un valor superior a 0"}), 400
 
-    #Comprobamos su expiración
-    if tokens[token]["expiration"] < datetime.now():
-        return jsonify({'error':'El token introducido expiró'}), 403
+    if not validate_token(datos.get('uid'),token):
+        return jsonify({'error':'Token o uid inválido'}), 401
+    
+    async with async_session() as session:
+        result = await session.execute(
+            text("""
+                UPDATE "user"
+                SET balance = balance + :amount
+                WHERE "UUID" = :uuid
+                RETURNING balance;
+            """),
+            {"uuid":datos.get('uid'),
+             "amount":datos.get('balance')},
+        )
+        balance = result.scalar_one_or_none()
+        await session.commit()
+    
+    if balance is None:
+        return jsonify({'error':'Usuario no encontrado'}), 404
 
-    usuario_uid = tokens[token]["uid"]
-    users[usuario_uid]["password"] = hash256(datos.get("password"))
-
-    return jsonify({'response':'Password modificada correctamente'}), 200
+    return jsonify({'response':f'Se ha incrementado el saldo de la cuenta a {balance}'}), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5050)
