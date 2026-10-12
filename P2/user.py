@@ -38,7 +38,7 @@ def hash256(data: str) -> str:
 
 
 async def get_conutry_id(country_name: str):
-    async with async_session as session:
+    async with async_session() as session:
         result = await session.execute(
             text(
                 """
@@ -54,18 +54,17 @@ async def get_conutry_id(country_name: str):
 
 async def get_new_cart_id():
     async with async_session() as session:
-    result = await session.execute(
-        text(
-            """
-            INSERT INTO cart
-            DEFAULT VALUES
-            RETURNING cartID
-            """
-        ),
-        {"country_name": country_name},
-    )
+        result = await session.execute(
+            text(
+                """
+                INSERT INTO cart
+                DEFAULT VALUES
+                RETURNING "cartID"
+                """
+            ),
+        )
 
-    return result.scalar_one()
+        return result.scalar_one()
 '''
 Función para gestionar las peticiones PUT.
 Guarda un usuario nuevo en la "base de datos" tomando el nombre de usuario
@@ -88,7 +87,6 @@ async def create_user():
         return jsonify({'error':'''El pais introducido es incorrecto. Por favor, usa el nombre en ingés con la primera letra
         en mayúscula. (Ej: Spain, France, Belgium)'''}), 400
     
-    cart_id = await get_new_cart_id()
 
     #Generacion del uuid
     user_uid = uuid.uuid4()
@@ -103,20 +101,23 @@ async def create_user():
     token = generate_token(stringified_uid)
 
     async with async_session() as session:
-        result = await session.execute(
-            text("""
-                INSERT INTO "user" ("UUID", username, password, "countryID", "balance", "cartID")
-                VALUES (:uuid, :username, :password, :country_id, :balance, :cart_id)
-                """),
-                {
-                    "uuid": stringified_uid,
-                    "username": datos.get('name'),
-                    "password": password256,
-                    "country_id": country_id,
-                    "balance": 0,
-                    "cart_id": cart_id,
-                },
-        )
+        async with session.begin()
+            cart_id = await get_new_cart_id()
+            result = await session.execute(
+                text("""
+                    INSERT INTO "user" ("UUID", username, password, "countryID", "balance", "cartID")
+                    VALUES (:uuid, :username, :password, :country_id, :balance, :cart_id)
+                    """),
+                    {
+                        "uuid": stringified_uid,
+                        "username": datos.get('name'),
+                        "password": password256,
+                        "country_id": country_id,
+                        "balance": 0,
+                        "cart_id": cart_id,
+                    },
+            )
+            await session.commit()
     return jsonify({"token":token ,"uid":stringified_uid}), 201
 
 
@@ -141,26 +142,25 @@ async def login():
     hashedpassword = hash256(password)
 
     #Buscamos por cada uid
-    async with async_session as session:
+    async with async_session() as session:
         result = await session.execute(
             text(
                 """
                 SELECT "username", "password"
-                FROM user
-                WHERE "username" = :username and "password" = :password
-                RETURNING UUID
+                FROM "user"
+                WHERE "username" = :username AND "password" = :password
                 """
             ),
             {"username": username,
              "password": hashedpassword},
         )
 
-        return result.scalar_one_or_none()
+        result.scalar_one_or_none()
     if result is None:
         #No encontrado
-        return jsonify({'error':'Usuario o contraseña incorrectos'}), 404
+        return jsonify({'error':'Usuario o contraseña incorrectos'}), 401
     
-    return jsonify({'uid':result,'token':generate_token(uid)}), 200
+    return jsonify({'uid':result,'token':generate_token(result)}), 200
 
 
 '''
