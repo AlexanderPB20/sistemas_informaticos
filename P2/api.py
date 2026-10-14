@@ -63,8 +63,9 @@ async def list_films():
             """
         ),
     )
-
-    return jsonify(result), 200
+    #Transformar la salida a diccionarios para poder "jsonificarlos"
+    entradas = [dict(fila) for fila in result.mappings().all()]
+    return jsonify(entradas), 200
 '''
 Función para gestionar las peticiones GET.
 Lista todas las películas que tengan un nombre similar a name
@@ -85,7 +86,9 @@ async def list_films(name: str):
         ),{"name":name},
     )
 
-    return jsonify(result), 200
+    #Transformar la salida a diccionarios para poder "jsonificarlos"
+    entradas = [dict(fila) for fila in result.mappings().all()]
+    return jsonify(entradas), 200
 
 '''
 Función para gestionar las peticiones GET.
