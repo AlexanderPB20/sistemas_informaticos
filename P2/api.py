@@ -71,7 +71,7 @@ Función para gestionar las peticiones GET.
 Lista todas las películas que tengan un nombre similar a name
 '''
 @app.get('/film/<name>')
-async def list_films(name: str):
+async def list_films_by_name(name: str):
     async with async_session() as session:
     result = await session.execute(
         text(
@@ -83,7 +83,7 @@ async def list_films(name: str):
             WHERE
             film."title" ILIKE :name
             """
-        ),{"name":name},
+        ),{"name":f"%{name}%"},
     )
 
     #Transformar la salida a diccionarios para poder "jsonificarlos"
@@ -128,6 +128,48 @@ async def list_cart():
     #Transformar la salida a diccionarios para poder "jsonificarlos"
     entradas = [dict(fila) for fila in result.mappings().all()]
     return jsonify(entradas), 200
+
+
+
+'''
+Función para gestionar las peticiones PUT.
+Agrega una película a la base de datos
+'''
+@app.put('/film/')
+async def add_film():
+    datos = await request.get_json()
+    if not datos:
+        return jsonify({'error':'''La petición no contiene JSON. Debe contener los campos:
+        \ntitle, descrpition, directorID (puede ser NULL) y price.'''}),400
+    
+    if 'title' not in datos or 'description' not in datos or 'directorID' not in datos or 'price' not in datos:
+        return jsonify({'error':'Archivo JSON incompleto.'}), 400
+    
+    if not autenticar(datos.get('uid')):
+        return jsonify({'error':'No tienes permiso para realizar esta acción. Comprueba las credenciales'}), 403
+
+    async with async_session() as session:
+        result = await session.execute(
+            text("""
+                INSERT INTO "film" ("title", "description", "directorID", "price")
+                VALUES(
+                :title,
+                :description,
+                :directorID,
+                :price);
+                RETURNING "filmID";
+                """
+            ),{"title":datos.get('title'),
+            "description":datos.get('description'),
+            "directorID":datos.get('directorID'),
+            "price":datos.get('price')},
+        )
+        filmID = result.scalar_one_or_none()
+        await session.commit()
+    
+    if not filmID:
+        return jsonify({'error':'No se ha podido añadir la película'}), 500
+    return jsonify({'info':f'Película añadida correctamente con id {filmID}','filmID':filmID}), 201
 
 
 if __name__ == '__main__':
