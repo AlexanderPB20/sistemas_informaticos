@@ -1,7 +1,7 @@
 from quart import Quart, jsonify, request
 import uuid
 import hashlib
-from sqlalchemy.orm import declarative_base sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from datetime import datetime, timedelta
 TOKEN_EXPIRATION_TIME = 15 #Minutes
@@ -103,7 +103,7 @@ async def create_user():
     token = generate_token(stringified_uid)
 
     async with async_session() as session:
-        async with session.begin()
+        async with session.begin():
             cart_id = await get_new_cart_id()
             result = await session.execute(
                 text("""
