@@ -56,15 +56,41 @@ async def list_films():
     result = await session.execute(
         text(
             """
-            SELECT "film.filmID","film.title","film.description","inventory.amount"
-            FROM film, inventory
-            WHERE inventory.filmID = film.filmID
+            SELECT film."filmID",film."title",film."description",inventory."amount"
+            FROM "film"
+            JOIN "inventory" ON
+            inventory."filmID" = film."filmID"
             """
         ),
     )
 
     return jsonify(result), 200
+'''
+Función para gestionar las peticiones GET.
+Lista todas las películas que tengan un nombre similar a name
+'''
+@app.get('/film/<name>')
+async def list_films(name: str):
+    async with async_session() as session:
+    result = await session.execute(
+        text(
+            """
+            SELECT film."filmID",film."title",film."description",inventory."amount"
+            FROM "film"
+            JOIN "inventory" ON
+            inventory."filmID" = film."filmID"
+            WHERE
+            film."title" ILIKE :name
+            """
+        ),{"name":name},
+    )
 
+    return jsonify(result), 200
+
+'''
+Función para gestionar las peticiones GET.
+Lista todas las entradas del carrito de un usuario
+'''
 @app.get('/cart/')
 async def list_cart():
     datos = await request.get_json()
@@ -78,20 +104,27 @@ async def list_cart():
         return jsonify({'error':'Token de la petición ó uid inválidos.'}), 403
 
     async with async_session() as session:
-    result = await session.execute(
-        text(
-            #Hay que sacar el titulo de film, quantity de cartLine. Donde coincidan el uid
-            #con el de la petición, el cartID de user con el cartID de cartLine, inventoryID de cartLine con
-            # inventoryID de inventory y filmID de inventory con filmID de film 
-            """
-            SELECT "film.filmID","film.title","film.description","inventory.amount"
-            FROM film, inventory
-            WHERE inventory.filmID = film.filmID
-            """
-        ),
-    )
+        result = await session.execute(
+            text("""
+                SELECT cartLine."lineID", cartLine."quantity", film."filmID", film."title", film."price"
+                    FROM "user"
+                    JOIN "cart"
+                        ON "cart"."cartID" = "user"."cartID"
+                    JOIN "cartLine"
+                        ON "cartLine"."cartID" = "cart"."cartID"
+                    JOIN "inventory"
+                        ON "inventory"."inventoryID" = "cartLine"."inventoryID"
+                    JOIN "film"
+                        ON "film"."filmID" = "inventory"."filmID"
+                    WHERE "user"."UUID" = :uuid
+                    AND "cart"."status" = 'active';
+                """
+            ),{"uuid":datos.get('uid'),},
+        )
 
-    return jsonify(result), 200
+    #Transformar la salida a diccionarios para poder "jsonificarlos"
+    entradas = [dict(fila) for fila in result.mappings().all()]
+    return jsonify(entradas), 200
 
 
 if __name__ == '__main__':
