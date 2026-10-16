@@ -170,6 +170,50 @@ async def add_film():
     if not filmID:
         return jsonify({'error':'No se ha podido añadir la película'}), 500
     return jsonify({'info':f'Película añadida correctamente con id {filmID}','filmID':filmID}), 201
+'''
+Función para gestionar las peticiones PUT.
+Agrega una entrada al carrito de un usuario
+'''
+@app.put('/cart/')
+async def add_cart_line():
+    datos = await request.get_json()
+    if not datos:
+        return jsonify({'error':'''La petición no contiene JSON. Debe contener los campos:
+        \nuid, filmID, amount.'''}),400
+    
+    if 'uid' not in datos or 'filmID' not in datos or 'amoount' not in datos:
+        return jsonify({'error':'Archivo JSON incompleto.'}), 400
+    
+    if not autenticar(datos.get('uid')):
+        return jsonify({'error':'No tienes permiso para realizar esta acción. Comprueba las credenciales'}), 403
+
+    async with async_session() as session:
+        result = await session.execute(
+            text("""
+                INSERT INTO "cartLine" ("inventoryID", "cartID", "quantity")
+                SELECT i."inventoryID", u."cartID", :amount 
+                FROM "user" u
+                JOIN "inventory" i ON i."filmID" = :filmID
+                WHERE u."UUID" = :uid
+                AND u."cartID" IS NOT NULL
+                RETURNING "lineID";
+                """
+            ),{"uid":datos.get('uid'),
+            "filmID":datos.get('filmID'),
+            "amount":datos.get('amount'),
+            },
+        )
+        lineID = result.scalar_one_or_none()
+        await session.commit()
+    
+    if not filmID:
+        return jsonify({'error':'No se ha podido añadir el pedido'}), 500
+    return jsonify({'info':f'Película añadida al carrito correctamente','lineID':lineID}), 201
+
+
+
+
+
 
 
 if __name__ == '__main__':
