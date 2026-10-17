@@ -211,6 +211,42 @@ async def add_cart_line():
     return jsonify({'info':f'Película añadida al carrito correctamente','lineID':lineID}), 201
 
 
+'''
+Función para gestionar las peticiones PUT.
+Publica un voto a una película
+'''
+@app.put('/vote/')
+async def vote_film():
+    datos = await request.get_json()
+    if not datos:
+        return jsonify({'error':'''La petición no contiene JSON. Debe contener los campos:
+        \nuid, filmID, score.'''}),400
+    
+    if 'uid' not in datos or 'filmID' not in datos or 'score' not in datos:
+        return jsonify({'error':'Archivo JSON incompleto.'}), 400
+    
+    if not autenticar(datos.get('uid')):
+        return jsonify({'error':'No tienes permiso para realizar esta acción. Comprueba las credenciales'}), 403
+
+    async with async_session() as session:
+        result = await session.execute(
+            text("""
+                INSERT INTO "vote" ("UUID", "filmID", "score")
+                VALUES (:uid, :filmID, :score)
+                RETURNING "voteID";
+                """
+            ),{"uid":datos.get('uid'),
+            "filmID":datos.get('filmID'),
+            "amount":datos.get('score'),
+            },
+        )
+        voteID = result.scalar_one_or_none()
+        await session.commit()
+    
+    if not filmID:
+        return jsonify({'error':'No se ha podido publicar el voto. Compruebe el ID de la película'}), 404
+    return jsonify({'info':f'Película añadida al carrito correctamente','voteID':voteID}), 201
+
 
 
 '''
