@@ -133,6 +133,7 @@ ON UPDATE NO ACTION ON DELETE CASCADE;
 
 CREATE OR REPLACE FUNCTION reservar_stock()
 RETURNS TRIGGER
+LANGUAGE plpgsql
 AS $$
 BEGIN
     UPDATE "inventory"
@@ -157,6 +158,7 @@ EXECUTE FUNCTION reservar_stock();
 
 CREATE OR REPLACE FUNCTION calcular_total_carrito()
 RETURNS TRIGGER
+LANGUAGE plpgsql
 AS $$
 DECLARE
     target_cartID INTEGER;
@@ -167,7 +169,7 @@ BEGIN
         target_cartID := NEW."cartID";
     END IF;
 
-    UPDATE "cart" c
+    UPDATE "cart" 
     SET "total" = COALESCE((
         SELECT SUM(cartLine."quantity" * film."price")
         FROM "cartLine"
@@ -177,7 +179,7 @@ BEGIN
         ON film."filmID" = inventory."filmID"
         WHERE cartLine."cartID" = target_cartID
     ), 0)
-    WHERE cartLine."cartID" = target_cartID;
+    WHERE cart."cartID" = target_cartID;
 
     RETURN NULL;
 END;
@@ -193,6 +195,7 @@ EXECUTE FUNCTION calcular_total_carrito();
 
 CREATE OR REPLACE FUNCTION cobrar_usuario()
 RETURNS TRIGGER
+LANGUAGE plpgsql
 AS $$
 BEGIN
     IF NEW."status" = 'completed' THEN
