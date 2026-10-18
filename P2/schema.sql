@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS "film" (
 	"description" TEXT NOT NULL,
 	"directorID" INTEGER,
 	"price" NUMERIC(10,2) NOT NULL CHECK("price" >= 0),
+	"filmScore" INTEGER NOT NULL DEFAULT 0 CHECK("score" BETWEEN 0 AND 10),
 	PRIMARY KEY("filmID")
 );
 
@@ -217,3 +218,42 @@ CREATE TRIGGER cobrar_usuario_trigger
 BEFORE INSERT ON "purchase"
 FOR EACH ROW
 EXECUTE FUNCTION cobrar_usuario();
+
+
+
+
+
+CREATE OR REPLACE PROCEDURE actualizar_puntuacion_media(
+    p_filmID INTEGER
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE "film"
+    SET "filmScore" = COALESCE(
+        (
+            SELECT ROUND(AVG("score"), 2)
+            FROM "vote"
+            WHERE "filmID" = p_filmID
+        ),
+        0
+    )
+    WHERE "filmID" = p_filmID;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION actualizar_puntuacion__trigger()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    CALL actualizar_puntuacion_media(NEW."filmID");
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER actualizar_puntuacion__trigger
+AFTER INSERT ON "vote"
+FOR EACH ROW
+EXECUTE FUNCTION actualizar_puntuacion__trigger();
