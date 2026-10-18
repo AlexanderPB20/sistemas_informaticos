@@ -324,5 +324,166 @@ async def delete_cart_line():
     return jsonify({'info':f'Película con id {filmID} eliminada de su carrito.'}), 201
 
 
+@app.post("/cart/")
+async def pagar_carrito():
+    datos = await request.get_json()
+    if not datos:
+        return jsonify({'error':'''La petición no contiene JSON. Debe contener los campos:
+        \nuid'''}),400
+    
+    if 'uid' not in datos:
+        return jsonify({'error':'Archivo JSON incompleto.'}), 400
+    
+    if not autenticar(datos.get('uid')):
+        return jsonify({'error':'No tienes permiso para realizar esta acción. Comprueba las credenciales'}), 403
+
+    uid = datos.get('uid')
+
+    async with async_session() as session:
+        async with session.begin():
+            # Bloquear usuario
+            user_result = await session.execute(
+                text("""
+                    SELECT "UUID", "cartID"
+                    FROM "user"
+                    WHERE "UUID" = :uid
+                    FOR UPDATE
+                """),
+                {"uid": uid},
+            )
+            usuario = user_result.mappings().one_or_none()
+
+            # Comprobar que el usuario existe.
+            ''' Esta comprobación es necesaria por un caso extremo en particular:
+            Como estamos comprobando la autenticación con una simple operación matemática,
+            técnicamente es posible que un usuario que haya sido eliminado de la BBDD pero que la persona
+            conserve el UID y token pueda autenticarse. '''
+            if usuario is None:
+                return jsonify({"error": "Usuario no encontrado"}), 404
+
+            #Obtener su carrito actual
+            cartID = usuario['cartID']
+
+            if cartID is None:
+                return jsonify({"error": "El usuario no tiene un carrito"}), 400
+
+            # Bloquear el carrito
+            consulta_carrito = await session.execute(
+                text("""
+                    SELECT "cartID", "status", "total"
+                    FROM "cart"
+                    WHERE "cartID" = :cartID
+                    FOR UPDATE
+                """),
+                {"cartID": cartID},
+            )
+            carrito = consulta_carrito.mappings().one_or_none()
+
+            #Comprobar si el carrito existe o no está activo
+            if carrito is None or carrito["status"] != "active":
+                return jsonify({"error": "El carrito no está activo"}), 400
+
+            # Bloquear el carrito y sacar las lineas
+            lineas_carrito = await session.execute(
+                text("""
+                    SELECT cartLine."inventoryID", cartLine."quantity",
+                        inventory."filmID", film."title", film."price"
+                    FROM "cartLine"
+                    JOIN "inventory"
+                    ON inventory."inventoryID" = cartLine."inventoryID"
+                    JOIN "film"
+                    ON film."filmID" = inventory."filmID"
+                    WHERE cartLine."cartID" = :cartID
+                    ORDER BY cartLine."lineID"
+                    FOR UPDATE OF cartLine
+                """),
+                {"cartID": cartID},
+            )
+            lineas = lineas_carrito.mappings().all()
+
+            #Comprobar si el carrito está vacío
+            if not lineas:
+                return jsonify({"error": "El carrito está vacío"}), 400
+
+            # Crear la entrada del pedido
+            consulta_compra = await session.execute(
+                text("""
+                    INSERT INTO "purchase" ("UUID", "total", "status")
+                    VALUES (:uid, :total, 'completed')
+                    RETURNING "purchaseID", "purchaseDate", "total", "status"
+                """),
+                {
+                    "uid": uid,
+                    "total": carrito['total'],
+                },
+            )
+            compra = consulta_compra.mappings().one()
+
+            # Crear las entradas de las lineas del pedido
+            for linea in lineas:
+                await session.execute(
+                    text("""
+                        INSERT INTO "purchase_detail" ("purchaseID", "filmID", "quantity", "unitPrice")
+                        VALUES (:purchaseID, :filmID, :quantity, :unit_price)
+                    """),
+                    {
+                        "purchaseID": compra["purchaseID"],
+                        "filmID": linea["filmID"],
+                        "quantity": linea["quantity"],
+                        "unit_price": linea["price"],
+                    },
+                )
+
+            # Completar carrito
+            await session.execute(
+                text("""
+                    UPDATE "cart"
+                    SET "status" = 'purchased'
+                    WHERE "cartID" = :cartID
+                """),
+                {"cartID": cartID},
+            )
+
+            # Reemplazar el carrito antiguo por uno nuevo
+            consulta_nuevo_carrito = await session.execute(
+                text("""
+                    INSERT INTO "cart"
+                    DEFAULT VALUES
+                    RETURNING "cartID"
+                """)
+            )
+            new_cartID = consulta_nuevo_carrito.scalar_one()
+
+            # Asignar el carrito nuevo al usuario
+            await session.execute(
+                text("""
+                    UPDATE "user"
+                    SET "cartID" = :new_cartID
+                    WHERE "UUID" = :uid
+                """),
+                {
+                    "new_cartID": new_cartID,
+                    "uid": uid,
+                },
+            )
+
+
+    ticket_pedido = {"id_compra": compra["purchaseID"],
+                     "estado": compra["status"],
+                     "fecha_compra": compra["purchaseDate"],
+                     "importe": compra["total"],
+
+                     "lineas":[
+                                {"titulo": linea["title"],
+                                 "cantidad": linea["quantity"],
+                                 "precio_unidad": linea["price"]
+                                } for linea in lineas
+                             ]
+                    }
+    
+    return jsonify({"info": "El pedido se ha realizado correctamente. Gracias por su compra.", "ticket":ticket_pedido}), 201
+
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5051)
