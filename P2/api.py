@@ -1,6 +1,7 @@
 from quart import Quart, jsonify, request
 import uuid
 from pathlib import Path
+from sqlalchemy import text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
@@ -63,6 +64,7 @@ async def list_films():
             """
         ),
     )
+
     #Transformar la salida a diccionarios para poder "jsonificarlos"
     entradas = [dict(fila) for fila in result.mappings().all()]
     return jsonify(entradas), 200
@@ -85,7 +87,6 @@ async def list_films_by_name(name: str):
             """
         ),{"name":f"%{name}%"},
     )
-
     #Transformar la salida a diccionarios para poder "jsonificarlos"
     entradas = [dict(fila) for fila in result.mappings().all()]
     return jsonify(entradas), 200
