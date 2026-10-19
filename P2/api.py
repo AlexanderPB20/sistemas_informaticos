@@ -1,6 +1,7 @@
 from quart import Quart, jsonify, request
 import uuid
 from pathlib import Path
+from sqlalchemy import text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
@@ -53,16 +54,16 @@ Lista todas las películas de la BBDD junto a su cantidad en el inventario (stoc
 @app.get('/film/')
 async def list_films():
     async with async_session() as session:
-    result = await session.execute(
-        text(
-            """
-            SELECT film."filmID",film."title",film."description",inventory."amount"
-            FROM "film"
-            JOIN "inventory" ON
-            inventory."filmID" = film."filmID"
-            """
-        ),
-    )
+        result = await session.execute(
+            text(
+                """
+                SELECT film."filmID",film."title",film."description",inventory."amount"
+                FROM "film"
+                JOIN "inventory" ON
+                inventory."filmID" = film."filmID"
+                """
+            ),
+        )
     #Transformar la salida a diccionarios para poder "jsonificarlos"
     entradas = [dict(fila) for fila in result.mappings().all()]
     return jsonify(entradas), 200
@@ -73,18 +74,18 @@ Lista todas las películas que tengan un nombre similar a name
 @app.get('/film/<name>')
 async def list_films_by_name(name: str):
     async with async_session() as session:
-    result = await session.execute(
-        text(
-            """
-            SELECT film."filmID",film."title",film."description",inventory."amount"
-            FROM "film"
-            JOIN "inventory" ON
-            inventory."filmID" = film."filmID"
-            WHERE
-            film."title" ILIKE :name
-            """
-        ),{"name":f"%{name}%"},
-    )
+        result = await session.execute(
+            text(
+                """
+                SELECT film."filmID",film."title",film."description",inventory."amount"
+                FROM "film"
+                JOIN "inventory" ON
+                inventory."filmID" = film."filmID"
+                WHERE
+                film."title" ILIKE :name
+                """
+            ),{"name":f"%{name}%"},
+        )
 
     #Transformar la salida a diccionarios para poder "jsonificarlos"
     entradas = [dict(fila) for fila in result.mappings().all()]
