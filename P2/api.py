@@ -56,7 +56,7 @@ async def list_films():
     result = await session.execute(
         text(
             """
-            SELECT film."filmID",film."title",film."description",inventory."amount"
+            SELECT film."filmID",film."title",film."description",inventory."amount", film."filmScore"
             FROM "film"
             JOIN "inventory" ON
             inventory."filmID" = film."filmID"
@@ -76,7 +76,7 @@ async def list_films_by_name(name: str):
     result = await session.execute(
         text(
             """
-            SELECT film."filmID",film."title",film."description",inventory."amount"
+            SELECT film."filmID",film."title",film."description",inventory."amount", film."filmScore"
             FROM "film"
             JOIN "inventory" ON
             inventory."filmID" = film."filmID"
