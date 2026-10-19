@@ -1,0 +1,40 @@
+version: "3.3"
+
+services:
+  postgreDB:
+    image: postgres:16
+    container_name: postgres_si1
+    restart: always
+    environment:
+      POSTGRES_USER: alumnodb
+      POSTGRES_PASSWORD: "1234"
+      POSTGRES_DB: si1
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./populate.sql:/docker-entrypoint-initdb.d/02-populate.sql
+
+  user_api:
+    build: .
+    command: python3 user.py
+    ports:
+      - "5050:5050"
+    depends_on:
+      - postgreDB
+    volumes:
+      - ./:/app
+
+  film_api:
+    build: .
+    command: python3 api.py
+    ports:
+      - "5051:5051"
+    depends_on:
+      - postgreDB
+    volumes:
+      - ./:/app
+
+volumes:
+  postgres_data:
