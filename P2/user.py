@@ -1,6 +1,7 @@
 from quart import Quart, jsonify, request
 import uuid
 import hashlib
+from sqlalchemy import text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from datetime import datetime, timedelta
