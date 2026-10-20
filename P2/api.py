@@ -207,7 +207,7 @@ async def add_cart_line():
         lineID = result.scalar_one_or_none()
         await session.commit()
     
-    if not filmID:
+    if not lineID:
         return jsonify({'error':'No se ha podido añadir el pedido'}), 500
     return jsonify({'info':f'Película añadida al carrito correctamente','lineID':lineID}), 201
 
@@ -244,7 +244,7 @@ async def vote_film():
         voteID = result.scalar_one_or_none()
         await session.commit()
     
-    if not filmID:
+    if not voteID:
         return jsonify({'error':'No se ha podido publicar el voto. Compruebe el ID de la película'}), 404
     return jsonify({'info':f'Película añadida al carrito correctamente','voteID':voteID}), 201
 
