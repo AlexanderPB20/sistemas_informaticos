@@ -45,6 +45,10 @@ if not probar_respuesta(201, "Usuario nuevo correcto", respuesta.status_code, re
 else:
     passed += 1
 
+#Si el usuario existe, salir
+if respuesta.status_code == 409:
+    exit()
+
 uid = respuesta.json()['uid']
 token = respuesta.json()['token']
 
@@ -128,261 +132,39 @@ else:
     passed += 1
 
 
-"""
 #######################################
-#   FILM PUT
-#######################################
-
-# 10. Crear fichero OK
-respuesta = requests.put(
-    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
-    headers={"authorization":f"Bearer {token}"},
-    json={"content":FILE_CONTENT})
-
-if not probar_respuesta(201, "Crear fichero correcto", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 11. Actualizar contenido de fichero OK
-respuesta = requests.put(
-    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
-    headers={"authorization":f"Bearer {token}"},
-    json={"content":NEW_FILE_CONTENT})
-
-if not probar_respuesta(201, "Actualizar contenido correcto", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 12. Crear fichero ERROR no content
-respuesta = requests.put(
-    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
-    headers={"authorization":f"Bearer {token}"},
-    json={"malaCabecera":FILE_CONTENT})
-
-if not probar_respuesta(400, "Crear fichero cabecera erronea", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 13. Crear fichero ERROR sin autenticar
-respuesta = requests.put(
-    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
-    json={"content":FILE_CONTENT})
-
-if not probar_respuesta(400, "Crear fichero sin autenticacion", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 14. Crear fichero ERROR token incorrecto
-respuesta = requests.put(
-    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
-    headers={"authorization":f"Bearer 123123-123123"},
-    json={"content":FILE_CONTENT})
-
-
-if not probar_respuesta(403, "Crear fichero autenticacion incorrecta", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 15. Crear fichero ERROR uid incorrecto
-respuesta = requests.put(
-    f"{FILE_ADDRESS}/nombrefalso/{FILENAME}",
-    headers={"authorization":f"Bearer {token}"},
-    json={"content":FILE_CONTENT})
-
-if not probar_respuesta(403, "Crear fichero nombre erroneo", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-#######################################
-#   FILE PATCH
+#   FILM GET
 #######################################
 
-# 16. Cambiar visibilidad a un fichero OK
-
-respuesta = requests.patch(
-    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
-    headers={"authorization":f"Bearer {token}"}
-    )
-
-if not probar_respuesta(200, "Cambiar fichero a público", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 17. Cambiar visibilidad a un fichero que ya es público OK
-
-respuesta = requests.patch(
-    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
-    headers={"authorization":f"Bearer {token}"}
-    )
-
-if not probar_respuesta(200, "Cambiar fichero público de nuevo a público", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 18. Cambiar visibilidad a un fichero ERROR fichero inexistente
-
-respuesta = requests.patch(
-    f"{FILE_ADDRESS}/{uid}/ficheroquenoesta.txt",
-    headers={"authorization":f"Bearer {token}"}
-    )
-
-if not probar_respuesta(404, "Cambiar fichero inexistente a público", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 19. Cambiar visibilidad a un fichero cuyo nombre ya existía en público ERROR
-# Fichero nuevo en privado
-respuesta = requests.put(
-    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
-    headers={"authorization":f"Bearer {token}"},
-    json={"content":NEW_FILE_CONTENT})
-# Cambio este nuevo a público
-respuesta = requests.patch(
-    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
-    headers={"authorization":f"Bearer {token}"}
-    )
-
-if not probar_respuesta(200, "Cambiar fichero a público con uno ya existente con el mismo nombre", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-#######################################
-#   FILE GET
-#######################################
-# 20. Obtener lista de ficheros publicos OK
+# 9. Listar peliculas OK
 respuesta = requests.get(
-    f"{FILE_ADDRESS}/{uid}")
+    f"{API_ADDRESS}/film")
 
-
-if not probar_respuesta(200, "Listar ficheros públicos", respuesta.status_code, respuesta.json()):
+if not probar_respuesta(200, "Listar peliculas", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
     passed += 1
 
-# 21. Listar ficheros privados OK
-# Fichero nuevo en privado
-respuesta = requests.put(
-    f"{FILE_ADDRESS}/{uid}/privado.txt",
-    headers={"authorization":f"Bearer {token}"},
-    json={"content":NEW_FILE_CONTENT})
-# Cambio este nuevo a público
+# 10. Listar peliculas por nombre OK
 respuesta = requests.get(
-    f"{FILE_ADDRESS}/{uid}",
-    headers={"authorization":f"Bearer {token}"}
-    )
+    f"{API_ADDRESS}/film/Immortal")
 
-if not probar_respuesta(200, "Obtener ficheros públicos y privados", respuesta.status_code, respuesta.json()):
+if not probar_respuesta(200, "Filtrar peliculas por nombre", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
     passed += 1
 
-# 22. Obtener contenido de un fichero público OK
+# 11. Listar carrito del usuario
 respuesta = requests.get(
-    f"{FILE_ADDRESS}/{uid}/{FILENAME}")
+    f"{API_ADDRESS}/cart",
+    headers={"Authorization":f"Bearer {token}"},
+    json={"uid":uid})
 
-if not probar_respuesta(200, "Contenido de un fichero público", respuesta.status_code, respuesta.json()):
+if not probar_respuesta(200, "Listar carrito", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
     passed += 1
 
-
-# 23. Obtener contenido de un fichero privado OK
-respuesta = requests.get(
-    f"{FILE_ADDRESS}/{uid}/privado.txt",
-    headers={"authorization":f"Bearer {token}"})
-
-if not probar_respuesta(200, "Obtener contenido de fichero privado", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 24. Listar ficheros con token incorrecto ERROR (devuelve públicos)
-# Fichero nuevo en privado
-respuesta = requests.get(
-    f"{FILE_ADDRESS}/{uid}",
-    headers={"authorization":f"Bearer 113123213123123"})
-
-if not probar_respuesta(200, "Intentar listar ficheros con token erroneo", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 25. Listar documentos de un uid inexistente ERROR
-respuesta = requests.get(
-    f"{FILE_ADDRESS}/3421221")
-
-if not probar_respuesta(404, "Intentar listar ficheros con UID erroneo", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 26. Obtener contenido de un fichero privado sin autenticacion ERROR
-respuesta = requests.get(
-    f"{FILE_ADDRESS}/{uid}/privado.txt")
-
-if not probar_respuesta(404, "Obtener contenido de un fichero privado sin token", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 27. Obtener contenido de un fichero inexistente ERROr
-respuesta = requests.get(
-    f"{FILE_ADDRESS}/{uid}/noexisto.pdf",
-    headers={"authorization":f"Bearer {token}"})
-
-if not probar_respuesta(404, "Intentar obtener contenido de fichero inexistente", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-
-#######################################
-#   FILE DELETE
-#######################################
-
-# 28. Borrar fichero OK
-# Sólo una prueba de borrar fichero, puesto que en 
-# público y privado es igual y siempre hace falta 
-# autenticarse
-respuesta = requests.delete(
-    f"{FILE_ADDRESS}/{uid}/{FILENAME}",
-    headers={"authorization":f"Bearer {token}"})
-
-if not probar_respuesta(200, "Borrar fichero", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 29. Borrar fichero inexistente ERROR
-respuesta = requests.delete(
-    f"{FILE_ADDRESS}/{uid}/noexistente.csv",
-    headers={"authorization":f"Bearer {token}"})
-
-if not probar_respuesta(404, "Borrar fichero inexistente", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 30. Borrar usando uid incorrecto
-respuesta = requests.delete(
-    f"{FILE_ADDRESS}/UIDFALSO/{FILENAME}",
-    headers={"authorization":f"Bearer {token}"})
-
-if not probar_respuesta(404, "Borrar de un uid inexistente", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-"""
 print("##################################")
 print(f"Resumen de pruebas: {passed}/{passed+not_passed} SUPERADAS")
 print("##################################")
