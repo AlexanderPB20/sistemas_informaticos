@@ -123,7 +123,7 @@ async def create_user():
                 )
     except Exception as e:
                     await session.rollback()
-                    return jsonify({"error":"Pais no encontrado en la base de datos"}), 404
+                    return jsonify({"error":"El usuario ya existe"}), 409
     return jsonify({"token":token ,"uid":stringified_uid}), 201
 
 
