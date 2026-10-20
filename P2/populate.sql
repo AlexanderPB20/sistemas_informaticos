@@ -58,6 +58,28 @@ VALUES
 (20,'No End (Bez konca)', 'est risus auctor sed tristique in tempus sit amet sem', 10.92,2);
 ;
 
+INSERT INTO "inventory" ("filmID", "amount")
+VALUES
+(1,2),
+(2,3),
+(3,0),
+(4,0),
+(5,4),
+(6,1),
+(7,5),
+(8,3),
+(9,10),
+(10,2),
+(11,0),
+(12,5),
+(13,2),
+(14,3),
+(15,4),
+(16,1),
+(17,0),
+(18,0),
+(19,7),
+(20,9);
 INSERT INTO "film_actor" ("filmID", "actorID")
 VALUES
 (1,1),
