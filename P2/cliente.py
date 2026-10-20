@@ -251,8 +251,7 @@ respuesta = requests.put(
     headers={"Authorization":f"Bearer {token}"},
     json={"uid":uid, "filmID": filmid,
           "amount":1})
-print(filmid)
-print(respuesta.json())
+
 respuesta = requests.delete(
     f"{API_ADDRESS}/cart",
     headers={"Authorization":f"Bearer {token}"},
