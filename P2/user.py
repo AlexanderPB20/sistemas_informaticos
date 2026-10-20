@@ -55,19 +55,18 @@ async def get_conutry_id(country_name: str):
 
         return result.scalar_one_or_none()
 
-async def get_new_cart_id():
-    async with async_session() as session:
-        result = await session.execute(
-            text(
-                """
-                INSERT INTO cart
-                DEFAULT VALUES
-                RETURNING "cartID"
-                """
-            ),
-        )
+async def get_new_cart_id(session):
+    result = await session.execute(
+        text(
+            """
+            INSERT INTO cart
+            DEFAULT VALUES
+            RETURNING "cartID"
+            """
+        ),
+    )
 
-        return result.scalar_one()
+    return result.scalar_one()
 '''
 Función para gestionar las peticiones PUT.
 Guarda un usuario nuevo en la "base de datos" tomando el nombre de usuario
@@ -103,24 +102,28 @@ async def create_user():
     #Agregar usuario a la base de datos
     token = generate_token(stringified_uid)
 
-    async with async_session() as session:
-        async with session.begin():
-            cart_id = await get_new_cart_id()
-            result = await session.execute(
-                text("""
-                    INSERT INTO "user" ("UUID", username, password, "countryID", "balance", "cartID")
-                    VALUES (:uuid, :username, :password, :country_id, :balance, :cart_id)
-                    """),
-                    {
-                        "uuid": stringified_uid,
-                        "username": datos.get('name'),
-                        "password": password256,
-                        "country_id": country_id,
-                        "balance": 0,
-                        "cart_id": cart_id,
-                    },
-            )
-            await session.commit()
+    try:
+        async with async_session() as session:
+            async with session.begin():
+                cart_id = await get_new_cart_id(session)
+
+                result = await session.execute(
+                    text("""
+                        INSERT INTO "user" ("UUID", username, password, "countryID", "balance", "cartID")
+                        VALUES (:uuid, :username, :password, :country_id, :balance, :cart_id)
+                        """),
+                        {
+                            "uuid": stringified_uid,
+                            "username": datos.get('name'),
+                            "password": password256,
+                            "country_id": country_id,
+                            "balance": 0,
+                            "cart_id": cart_id,
+                        },
+                )
+    except Exception as e:
+                    await session.rollback()
+                    return jsonify({"error":"Pais no encontrado en la base de datos"}), 404
     return jsonify({"token":token ,"uid":stringified_uid}), 201
 
 
