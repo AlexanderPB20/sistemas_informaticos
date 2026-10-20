@@ -3,7 +3,7 @@ import requests
 USER_ADDRESS = "http://127.0.0.1:5050/user"
 API_ADDRESS = "http://127.0.0.1:5051/"
 
-USER = "Usuario_prueba"
+USER = "usuario_prueba"
 PASSWORD = "password_prueba"
 
 passed = 0
@@ -154,13 +154,91 @@ if not probar_respuesta(200, "Filtrar peliculas por nombre", respuesta.status_co
 else:
     passed += 1
 
-# 11. Listar carrito del usuario
+# 11. Listar carrito del usuario OK
 respuesta = requests.get(
     f"{API_ADDRESS}/cart",
     headers={"Authorization":f"Bearer {token}"},
     json={"uid":uid})
 
 if not probar_respuesta(200, "Listar carrito", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+
+# 12. Listar carrito del usuario ERROR cabecera incompleta
+respuesta = requests.get(
+    f"{API_ADDRESS}/cart",
+    json={"uid":uid})
+
+if not probar_respuesta(403, "Listar carrito sin token", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+#######################################
+#   FILM PUT
+#######################################
+
+# 13. Agregar pelicula a la base de datos OK
+respuesta = requests.put(
+    f"{API_ADDRESS}/film",
+    headers={"Authorization":f"Bearer {token}"},
+    json={"uid":uid, "title":"Requiem aeternam",
+          "description":"Dona eis, Domine. Libera me, Domine, de morte aeterna.",
+          "directorID":1,
+          "amount":3,
+          "price":10.99})
+
+if not probar_respuesta(201, "Agregar nueva película", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+filmid = respuesta.json()['filmID']
+
+# 14. Agregar pelicula al carrito OK
+respuesta = requests.put(
+    f"{API_ADDRESS}/cart",
+    headers={"Authorization":f"Bearer {token}"},
+    json={"uid":uid, "filmID": filmid,
+          "amount":1})
+
+if not probar_respuesta(201, "Agregar nueva película", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+respuesta = requests.get(
+    f"{API_ADDRESS}/cart",
+    headers={"Authorization":f"Bearer {token}"},
+    json={"uid":uid})
+print(respuesta.json())
+
+# 15. Voto OK
+respuesta = requests.put(
+    f"{API_ADDRESS}/vote",
+    headers={"Authorization":f"Bearer {token}"},
+    json={"uid":uid, "filmID": filmid,
+          "score":10})
+print("Código:", respuesta.status_code)
+print("Respuesta:", repr(respuesta.text))
+if not probar_respuesta(201, "Votar una película", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+#######################################
+#   FILM POST
+#######################################
+# 16. Pagar carrito OK
+
+respuesta = requests.post(
+    f"{API_ADDRESS}/cart",
+    headers={"Authorization":f"Bearer {token}"},
+    json={"uid":uid})
+
+if not probar_respuesta(201, "Pagar el carrito", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
     passed += 1
