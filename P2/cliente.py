@@ -221,8 +221,7 @@ respuesta = requests.put(
     headers={"Authorization":f"Bearer {token}"},
     json={"uid":uid, "filmID": filmid,
           "score":10})
-print("Código:", respuesta.status_code)
-print("Respuesta:", repr(respuesta.text))
+
 if not probar_respuesta(201, "Votar una película", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
@@ -243,6 +242,35 @@ if not probar_respuesta(201, "Pagar el carrito", respuesta.status_code, respuest
 else:
     passed += 1
 
+#######################################
+#   FILM DELETE
+#######################################
+# 17. Eliminar una pelicula del carrito OK
+respuesta = requests.put(
+    f"{API_ADDRESS}/cart",
+    headers={"Authorization":f"Bearer {token}"},
+    json={"uid":uid, "filmID": filmid,
+          "amount":1})
+print(filmid)
+print(respuesta.json())
+respuesta = requests.delete(
+    f"{API_ADDRESS}/cart",
+    headers={"Authorization":f"Bearer {token}"},
+    json={"uid":uid, "filmID": filmid})
+if not probar_respuesta(201, "Eliminar linea del carrito", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 18. Eliminar una pelicula OK
+respuesta = requests.delete(
+    f"{API_ADDRESS}/film",
+    headers={"Authorization":f"Bearer {token}"},
+    json={"uid":uid, "filmID": filmid})
+if not probar_respuesta(201, "Eliminar pelicula", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
 print("##################################")
 print(f"Resumen de pruebas: {passed}/{passed+not_passed} SUPERADAS")
 print("##################################")
