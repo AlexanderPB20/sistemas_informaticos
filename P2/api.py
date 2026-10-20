@@ -157,7 +157,7 @@ async def add_film():
                 :title,
                 :description,
                 :directorID,
-                :price);
+                :price)
                 RETURNING "filmID";
                 """
             ),{"title":datos.get('title'),
@@ -238,22 +238,23 @@ async def vote_film():
     
     if not autenticar(datos.get('uid')):
         return jsonify({'error':'No tienes permiso para realizar esta acción. Comprueba las credenciales'}), 403
-
-    async with async_session() as session:
-        result = await session.execute(
-            text("""
-                INSERT INTO "vote" ("UUID", "filmID", "score")
-                VALUES (:uid, :filmID, :score)
-                RETURNING "voteID";
-                """
-            ),{"uid":datos.get('uid'),
-            "filmID":datos.get('filmID'),
-            "amount":datos.get('score'),
-            },
-        )
-        voteID = result.scalar_one_or_none()
-        await session.commit()
-    
+    try:
+        async with async_session() as session:
+            result = await session.execute(
+                text("""
+                    INSERT INTO "vote" ("UUID", "filmID", "score")
+                    VALUES (:uid, :filmID, :score)
+                    RETURNING "voteID";
+                    """
+                ),{"uid":datos.get('uid'),
+                "filmID":datos.get('filmID'),
+                "score":datos.get('score'),
+                },
+            )
+            voteID = result.scalar_one_or_none()
+            await session.commit()
+    except Exception:
+        return jsonify({'error':'Error al votar la película'}),500
     if not voteID:
         return jsonify({'error':'No se ha podido publicar el voto. Compruebe el ID de la película'}), 404
     return jsonify({'info':f'Película añadida al carrito correctamente','voteID':voteID}), 201
@@ -397,16 +398,16 @@ async def pagar_carrito():
             # Bloquear el carrito y sacar las lineas
             lineas_carrito = await session.execute(
                 text("""
-                    SELECT cartLine."inventoryID", cartLine."quantity",
-                        inventory."filmID", film."title", film."price"
+                    SELECT "cartLine"."inventoryID", "cartLine"."quantity",
+                        "inventory"."filmID", "film"."title", "film"."price"
                     FROM "cartLine"
                     JOIN "inventory"
-                    ON inventory."inventoryID" = cartLine."inventoryID"
+                    ON "inventory"."inventoryID" = "cartLine"."inventoryID"
                     JOIN "film"
-                    ON film."filmID" = inventory."filmID"
-                    WHERE cartLine."cartID" = :cartID
-                    ORDER BY cartLine."lineID"
-                    FOR UPDATE OF cartLine
+                    ON "film"."filmID" = "inventory"."filmID"
+                    WHERE "cartLine"."cartID" = :cartID
+                    ORDER BY "cartLine"."lineID"
+                    FOR UPDATE OF "cartLine"
                 """),
                 {"cartID": cartID},
             )
