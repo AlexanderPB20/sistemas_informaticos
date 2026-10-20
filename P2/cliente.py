@@ -48,7 +48,6 @@ else:
 uid = respuesta.json()['uid']
 token = respuesta.json()['token']
 
-"""
 # 2. Creacion de usuario ERROR no json
 respuesta = requests.put(
     USER_ADDRESS)
@@ -76,7 +75,6 @@ else:
 respuesta = requests.post(
     USER_ADDRESS,
     json={"name":USER, "password":PASSWORD})
-
 if not probar_respuesta(200, "Login correcto", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
@@ -87,7 +85,7 @@ respuesta = requests.post(
     USER_ADDRESS,
     json={"name":"notfound", "password":"fakepassword"})
 
-if not probar_respuesta(404, "Login credenciales incorrectas", respuesta.status_code, respuesta.json()):
+if not probar_respuesta(401, "Login credenciales incorrectas", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
     passed += 1
@@ -96,43 +94,33 @@ else:
 #   USER PATCH
 #######################################
 
-# 6. Cambio de contraseña OK
+# 6. Más saldo OK
 respuesta = requests.patch(
     USER_ADDRESS,
     headers = {"Authorization": f"Bearer {token}"},
-    json={"password":NEW_PASWORD})
+    json={"uid":uid,"balance":20})
 
-if not probar_respuesta(200, "Cambio de contraseña", respuesta.status_code, respuesta.json()):
+if not probar_respuesta(200, "Incremento de saldo", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
     passed += 1
 
-# 7. Cambio de contraseña efectivo OK
-respuesta = requests.post(
-    USER_ADDRESS,
-    json={"name":USER, "password":NEW_PASWORD})
-
-if not probar_respuesta(200, "Login correcto tras cambio de contraseña", respuesta.status_code, respuesta.json()):
-    not_passed+=1
-else:
-    passed += 1
-
-# 8. Token incorrecto ERROR
+# 7. Token incorrecto ERROR
 respuesta = requests.patch(
     USER_ADDRESS,
     headers={"Authorization":f"Bearer 3232132321-32-321-321-21"},
-    json={"password":PASSWORD})
+    json={"uid":uid,"balance":2})
 
-if not probar_respuesta(400, "Token incorrecto en cambio de contraseña", respuesta.status_code, respuesta.json()):
+if not probar_respuesta(401, "Token incorrecto en aumento de saldo", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
     passed += 1
 
 
-# 9. Cabecera incompleta ERROR
+# 8. Cabecera incompleta ERROR
 respuesta = requests.patch(
     USER_ADDRESS,
-    json={"password":PASSWORD})
+    json={"uid":uid,"balance":2})
 
 if not probar_respuesta(400, "Cabecera incompleta", respuesta.status_code, respuesta.json()):
     not_passed+=1
@@ -140,8 +128,9 @@ else:
     passed += 1
 
 
+"""
 #######################################
-#   FILE PUT
+#   FILM PUT
 #######################################
 
 # 10. Crear fichero OK
