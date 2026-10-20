@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS "film" (
 	"description" TEXT NOT NULL,
 	"directorID" INTEGER,
 	"price" NUMERIC(10,2) NOT NULL CHECK("price" >= 0),
-	"filmScore" INTEGER NOT NULL DEFAULT 0 CHECK("score" BETWEEN 0 AND 10),
+	"filmScore" INTEGER NOT NULL DEFAULT 0 CHECK("filmScore" BETWEEN 0 AND 10),
 	PRIMARY KEY("filmID")
 );
 
