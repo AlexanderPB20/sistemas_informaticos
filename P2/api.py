@@ -257,7 +257,7 @@ async def vote_film():
         return jsonify({'error':'Error al votar la película'}),500
     if not voteID:
         return jsonify({'error':'No se ha podido publicar el voto. Compruebe el ID de la película'}), 404
-    return jsonify({'info':f'Película añadida al carrito correctamente','voteID':voteID}), 201
+    return jsonify({'info':f'Voto emitido correctamente','voteID':voteID}), 201
 
 
 
@@ -267,41 +267,6 @@ Elimina una película de la BBDD
 '''
 @app.delete('/film/')
 async def delete_film():
-    datos = await request.get_json()
-    if not datos:
-        return jsonify({'error':'''La petición no contiene JSON. Debe contener los campos:
-        \nuid, filmID'''}),400
-    
-    if 'uid' not in datos or 'filmID' not in datos:
-        return jsonify({'error':'Archivo JSON incompleto.'}), 400
-    
-    if not autenticar(datos.get('uid')):
-        return jsonify({'error':'No tienes permiso para realizar esta acción. Comprueba las credenciales'}), 403
-
-    async with async_session() as session:
-        result = await session.execute(
-            text("""
-                DELETE FROM "film"
-                WHERE "filmID" = :filmID
-                returning "filmID";
-                """
-            ),{"uid":datos.get('uid'),
-            "filmID":datos.get('filmID'),
-            },
-        )
-        filmID = result.scalar_one_or_none()
-        await session.commit()
-    
-    if not filmID:
-        return jsonify({'error':'No se ha podido eliminar la película. Asegúrese de que el ID esté bien escrito'}), 404
-    return jsonify({'info':f'Película con id {filmID} eliminada de la base de datos.'}), 201
-
-'''
-Función para gestionar las peticiones DELETE.
-Elimina una película del carrito
-'''
-@app.delete('/cart/')
-async def delete_cart_line():
     datos = await request.get_json()
     if not datos:
         return jsonify({'error':'''La petición no contiene JSON. Debe contener los campos:
@@ -339,13 +304,47 @@ async def delete_cart_line():
         )
         result = await session.execute(
             text("""
+                DELETE FROM "film"
+                WHERE "filmID" = :filmID
+                returning "filmID";
+                """
+            ),{"filmID":datos.get('filmID'),
+            },
+        )
+        filmID = result.scalar_one_or_none()
+        await session.commit()
+    
+    if not filmID:
+        return jsonify({'error':'No se ha podido eliminar la película. Asegúrese de que el ID esté bien escrito'}), 404
+    return jsonify({'info':f'Película con id {filmID} eliminada de la base de datos.'}), 201
+
+'''
+Función para gestionar las peticiones DELETE.
+Elimina una película del carrito
+'''
+@app.delete('/cart/')
+async def delete_cart_line():
+    datos = await request.get_json()
+    if not datos:
+        return jsonify({'error':'''La petición no contiene JSON. Debe contener los campos:
+        \nuid, filmID'''}),400
+    
+    if 'uid' not in datos or 'filmID' not in datos:
+        return jsonify({'error':'Archivo JSON incompleto.'}), 400
+    
+    if not autenticar(datos.get('uid')):
+        return jsonify({'error':'No tienes permiso para realizar esta acción. Comprueba las credenciales'}), 403
+
+    async with async_session() as session:
+        result = await session.execute(
+            text("""
                 DELETE FROM "cartLine"
                 USING "inventory", "user"
                 WHERE "cartLine"."inventoryID" = "inventory"."inventoryID"
                 AND "cartLine"."cartID" = "user"."cartID"
                 AND "user"."UUID" = :uid
                 AND "inventory"."filmID" = :filmID
-                RETURNING "cartLine"."lineID";
+                RETURNING "inventory"."filmID";
                 """
             ),{"uid":datos.get('uid'),
             "filmID":datos.get('filmID'),
