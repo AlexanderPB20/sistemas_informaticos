@@ -314,15 +314,38 @@ async def delete_cart_line():
         return jsonify({'error':'No tienes permiso para realizar esta acción. Comprueba las credenciales'}), 403
 
     async with async_session() as session:
+        # Hay que eliminar también la entrada del inventario, de purchaseDetail y cartLine
+        await session.execute(
+            text("""
+                DELETE FROM "cartLine"
+                WHERE "inventoryID" IN (
+                SELECT "inventoryID"
+                FROM "inventory"
+                WHERE "filmID" = :filmID
+                )
+                """),{"filmID": datos.get('filmID')}
+        )
+        await session.execute(
+            text("""
+                DELETE FROM "purchase_detail"
+                WHERE "filmID" = :filmID;
+                """),{"filmID": datos.get('filmID')}
+        )
+        await session.execute(
+            text("""
+                DELETE FROM "inventory"
+                WHERE "filmID" = :filmID
+            """),{"filmID":datos.get('filmID')}
+        )
         result = await session.execute(
             text("""
-                DELETE FROM "cartLine" cl
-                USING "inventory" i, "user" u
-                WHERE cl."inventoryID" = i."inventoryID"
-                AND cl."cartID" = u."cartID"
-                AND u."UUID" = :uid
-                AND i."filmID" = :filmID
-                RETURNING cl."lineID";
+                DELETE FROM "cartLine"
+                USING "inventory", "user"
+                WHERE "cartLine"."inventoryID" = "inventory"."inventoryID"
+                AND "cartLine"."cartID" = "user"."cartID"
+                AND "user"."UUID" = :uid
+                AND "inventory"."filmID" = :filmID
+                RETURNING "cartLine"."lineID";
                 """
             ),{"uid":datos.get('uid'),
             "filmID":datos.get('filmID'),
