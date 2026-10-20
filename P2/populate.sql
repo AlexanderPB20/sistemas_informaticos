@@ -102,3 +102,32 @@ VALUES
 (18,6),
 (19,3),
 (20,5);
+
+
+--Al parecer, es obligatorio ir sincronizando los valores
+--que insertamos a mano de los id para que luego no den problemas
+--cuando insertamos nuevas peliculas dinamicamente
+
+SELECT setval(
+    pg_get_serial_sequence('"country"', 'countryID'),
+    (SELECT MAX("countryID") FROM "country"),
+    true
+);
+
+SELECT setval(
+    pg_get_serial_sequence('"director"', 'directorID'),
+    (SELECT MAX("directorID") FROM "director"),
+    true
+);
+
+SELECT setval(
+    pg_get_serial_sequence('"actor"', 'actorID'),
+    (SELECT MAX("actorID") FROM "actor"),
+    true
+);
+
+SELECT setval(
+    pg_get_serial_sequence('"film"', 'filmID'),
+    (SELECT MAX("filmID") FROM "film"),
+    true
+);
