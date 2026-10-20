@@ -57,10 +57,10 @@ async def list_films():
         result = await session.execute(
             text(
                 """
-                SELECT film."filmID",film."title",film."description",inventory."amount", film."filmScore"
+                SELECT "film"."filmID","film"."title","film"."description","inventory"."amount", "film"."filmScore"
                 FROM "film"
                 JOIN "inventory" ON
-                inventory."filmID" = film."filmID"
+                "inventory"."filmID" = "film"."filmID"
                 """
             ),
         )
@@ -110,7 +110,7 @@ async def list_cart():
     async with async_session() as session:
         result = await session.execute(
             text("""
-                SELECT cartLine."lineID", cartLine."quantity", film."filmID", film."title", film."price"
+                SELECT "cartLine"."lineID", "cartLine"."quantity", film."filmID", film."title", film."price"
                     FROM "user"
                     JOIN "cart"
                         ON "cart"."cartID" = "user"."cartID"
@@ -141,9 +141,9 @@ async def add_film():
     datos = await request.get_json()
     if not datos:
         return jsonify({'error':'''La petición no contiene JSON. Debe contener los campos:
-        \ntitle, descrpition, directorID (puede ser NULL) y price.'''}),400
+        \ntitle, descrpition, directorID (puede ser NULL), amount y price.'''}),400
     
-    if 'title' not in datos or 'description' not in datos or 'directorID' not in datos or 'price' not in datos:
+    if 'title' not in datos or 'description' not in datos or 'directorID' not in datos or 'amount' not in datos or 'price' not in datos:
         return jsonify({'error':'Archivo JSON incompleto.'}), 400
     
     if not autenticar(datos.get('uid')):
@@ -166,6 +166,16 @@ async def add_film():
             "price":datos.get('price')},
         )
         filmID = result.scalar_one_or_none()
+
+        result = await session.execute(
+            text("""
+                INSERT INTO "inventory" ("filmID", "amount")
+                 VALUES(
+                 :filmID,
+                 :amount)
+                 """),{"filmID": filmID,
+                       "amount": datos.get('amount')}
+        )
         await session.commit()
     
     if not filmID:
@@ -192,11 +202,11 @@ async def add_cart_line():
         result = await session.execute(
             text("""
                 INSERT INTO "cartLine" ("inventoryID", "cartID", "quantity")
-                SELECT i."inventoryID", u."cartID", :amount 
-                FROM "user" u
-                JOIN "inventory" i ON i."filmID" = :filmID
-                WHERE u."UUID" = :uid
-                AND u."cartID" IS NOT NULL
+                SELECT "inventory"."inventoryID", "user"."cartID", :amount 
+                FROM "user"
+                JOIN "inventory" ON "inventory"."filmID" = :filmID
+                WHERE "user"."UUID" = :uid
+                AND "user"."cartID" IS NOT NULL
                 RETURNING "lineID";
                 """
             ),{"uid":datos.get('uid'),
