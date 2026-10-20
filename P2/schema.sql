@@ -172,13 +172,13 @@ BEGIN
 
     UPDATE "cart" 
     SET "total" = COALESCE((
-        SELECT SUM(cartLine."quantity" * film."price")
+        SELECT SUM("cartLine"."quantity" * "film"."price")
         FROM "cartLine"
         JOIN "inventory"
-        ON inventory."inventoryID" = cartLine."inventoryID"
+        ON "inventory"."inventoryID" = "cartLine"."inventoryID"
         JOIN "film"
-        ON film."filmID" = inventory."filmID"
-        WHERE cartLine."cartID" = target_cartID
+        ON "film"."filmID" = "inventory"."filmID"
+        WHERE "cartLine"."cartID" = target_cartID
     ), 0)
     WHERE cart."cartID" = target_cartID;
 
