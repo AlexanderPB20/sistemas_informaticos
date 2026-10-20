@@ -148,25 +148,30 @@ async def login():
     hashedpassword = hash256(password)
 
     #Buscamos por cada uid
-    async with async_session() as session:
-        result = await session.execute(
-            text(
-                """
-                SELECT "username", "password"
-                FROM "user"
-                WHERE "username" = :username AND "password" = :password
-                """
-            ),
-            {"username": username,
-             "password": hashedpassword},
-        )
+    try:
+        async with async_session() as session:
+            result = await session.execute(
+                text(
+                    """
+                    SELECT "UUID"
+                    FROM "user"
+                    WHERE "username" = :username AND "password" = :password
+                    """
+                ),
+                {"username": username,
+                "password": hashedpassword},
+            )
 
-        result.scalar_one_or_none()
-    if result is None:
+            uid = result.scalar_one_or_none()
+    except Exception as e:
+        await session.rollback()
+        return jsonify({"error":"Usuario o contraseña incorrectos"}), 401
+
+    if uid is None:
         #No encontrado
         return jsonify({'error':'Usuario o contraseña incorrectos'}), 401
     
-    return jsonify({'uid':result,'token':generate_token(result)}), 200
+    return jsonify({'uid':uid,'token':generate_token(str(uid))}), 200
 
 
 '''
