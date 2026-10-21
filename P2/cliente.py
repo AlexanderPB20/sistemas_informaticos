@@ -3,7 +3,7 @@ import requests
 USER_ADDRESS = "http://127.0.0.1:5050/user"
 API_ADDRESS = "http://127.0.0.1:5051/"
 
-USER = "usuario_prueba"
+USER = "usuario2ss_prueba"
 PASSWORD = "password_prueba"
 
 passed = 0
@@ -145,9 +145,9 @@ if not probar_respuesta(200, "Listar peliculas", respuesta.status_code, respuest
 else:
     passed += 1
 
-print("ID   Titulo              Unidades   Puntuacion")
+print("ID\tTitulo\t\t\tUnidades\tPuntuacion")
 for film in respuesta.json():
-    print(f"{film["filmID"]},{film["title"]},{film["amount"]},{film["filmScore"]}")
+    print(f"{film["filmID"]}\t{film["title"]}\t{film["amount"]}\t{film["filmScore"]}")
 # 10. Listar peliculas por nombre OK
 respuesta = requests.get(
     f"{API_ADDRESS}/film/Immortal")
