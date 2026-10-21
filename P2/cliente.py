@@ -145,6 +145,9 @@ if not probar_respuesta(200, "Listar peliculas", respuesta.status_code, respuest
 else:
     passed += 1
 
+print("ID   Titulo              Unidades   Puntuacion")
+for film in respuesta.json():
+    print(f"{film["filmID"]},{film["title"]},{film["amount"]},{film["filmScore"]}")
 # 10. Listar peliculas por nombre OK
 respuesta = requests.get(
     f"{API_ADDRESS}/film/Immortal")
