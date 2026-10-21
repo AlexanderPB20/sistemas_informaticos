@@ -17,7 +17,8 @@ services:
       - ./populate.sql:/docker-entrypoint-initdb.d/02-populate.sql
 
   user_api:
-    build: .
+    build: 
+      network: host
     command: python3 user.py
     ports:
       - "5050:5050"
@@ -27,7 +28,8 @@ services:
       - ./:/app
 
   film_api:
-    build: .
+    build: 
+      network: host
     command: python3 api.py
     ports:
       - "5051:5051"
