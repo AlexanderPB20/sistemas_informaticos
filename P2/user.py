@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 TOKEN_EXPIRATION_TIME = 15 #Minutes
 
 app = Quart(__name__)
-DATABASE_URL = "postgresql+asyncpg://alumnodb:1234@localhost:9999/si1"
+DATABASE_URL = "postgresql+asyncpg://alumnodb:1234@postgreDB:5432/si1"
 # --- Engine y sesión asíncronos ---
 engine = create_async_engine(DATABASE_URL, echo=False)
 async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
