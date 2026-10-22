@@ -3,7 +3,7 @@ import requests
 USER_ADDRESS = "http://127.0.0.1:5050/user"
 API_ADDRESS = "http://127.0.0.1:5051/"
 
-USER = "usuario2ss_prueba"
+USER = "usuario_prueba"
 PASSWORD = "password_prueba"
 
 passed = 0
@@ -270,6 +270,15 @@ respuesta = requests.delete(
     headers={"Authorization":f"Bearer {token}"},
     json={"uid":uid, "filmID": filmid})
 if not probar_respuesta(201, "Eliminar pelicula", respuesta.status_code, respuesta.json()):
+    not_passed+=1
+else:
+    passed += 1
+
+# 19. Sacar ventas del año
+respuesta = requests.get(
+    f"{API_ADDRESS}/ventas/2026/Spain",
+    headers={"Authorization":f"Bearer {token}"})
+if not probar_respuesta(200, "Ventas", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
     passed += 1

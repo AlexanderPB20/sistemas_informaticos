@@ -292,7 +292,7 @@ async def delete_film():
         )
         await session.execute(
             text("""
-                DELETE FROM "purchase_detail"
+                DELETE FROM "purchaseDetail"
                 WHERE "filmID" = :filmID;
                 """),{"filmID": datos.get('filmID')}
         )
@@ -457,7 +457,7 @@ async def pagar_carrito():
             for linea in lineas:
                 await session.execute(
                     text("""
-                        INSERT INTO "purchase_detail" ("purchaseID", "filmID", "quantity", "unitPrice")
+                        INSERT INTO "purchaseDetail" ("purchaseID", "filmID", "quantity", "unitPrice")
                         VALUES (:purchaseID, :filmID, :quantity, :unit_price)
                     """),
                     {
@@ -517,7 +517,24 @@ async def pagar_carrito():
     
     return jsonify({"info": "El pedido se ha realizado correctamente. Gracias por su compra.", "ticket":ticket_pedido}), 201
 
-
+@app.get('/ventas/<year>/<country>')
+async def filtrar_ventas(year: int, country: str):
+    async with async_session() as session:
+        result = await session.execute(
+            text("""
+                SELECT "purchase"."purchaseID", "purchase"."purchaseDate", "purchase"."total", 
+                       "user"."username", "country"."name" AS "country"
+                FROM "purchase"
+                JOIN "user" ON "user"."UUID" = "purchase"."UUID"
+                JOIN "country" ON "country"."countryID" = "user"."countryID"
+                WHERE EXTRACT(YEAR FROM "purchase"."purchaseDate") = :year
+                  AND "country"."name" ILIKE :country;
+            """),
+            {"year": year,
+             "country": country}
+        )
+        ventas = [dict(row) for row in result.mappings().all()]
+        return jsonify(ventas), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5051)
