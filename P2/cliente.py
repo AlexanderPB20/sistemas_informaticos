@@ -207,7 +207,7 @@ respuesta = requests.put(
     json={"uid":uid, "filmID": filmid,
           "amount":1})
 
-if not probar_respuesta(201, "Agregar nueva película", respuesta.status_code, respuesta.json()):
+if not probar_respuesta(201, "Meter película en el carrito", respuesta.status_code, respuesta.json()):
     not_passed+=1
 else:
     passed += 1
