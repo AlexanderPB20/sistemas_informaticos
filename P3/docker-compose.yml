@@ -1,0 +1,21 @@
+version: "3.3"
+
+services:
+
+  auth_api:
+    build: 
+      network: host
+    command: python3 /auth-service/__init__.py
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./:/app
+
+  library_api:
+    build: 
+      network: host
+    command: python3 /library-service/__init__.py
+    ports:
+      - "5051:5051"
+    volumes:
+      - ./:/app
