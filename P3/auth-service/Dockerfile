@@ -5,13 +5,13 @@ FROM python:3.12
 WORKDIR /app
 
 # Copia el archivo de dependencias para instalar las librerías necesarias de python
-COPY requirements.txt requirements.txt
+COPY requirements.txt .
 
 # Instala las dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia el código de la API dentro del contenedor
-COPY . .
+COPY app ./app
 
 # Abre los puertos de escucha del contenedor
 EXPOSE 5050 
