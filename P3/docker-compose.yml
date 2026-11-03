@@ -1,6 +1,15 @@
 version: "3.3"
 
 services:
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx/nginx.conf:/tmp/nginx.conf
+    ports:
+      - 8080:8080
+    depends_on:
+      - auth_api
+      - library_api
 
   auth_api:
     build: 
@@ -19,3 +28,26 @@ services:
       - "5051:5051"
     volumes:
       - ./:/app
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo
+    hostname: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: alumnodb
+      MONGO_INITDB_ROOT_PASSWORD: "1234"
+      MONGO_INITDB_DATABASE: si1
+    build:
+      network: host
+    ports:
+      - "27017:27017"
+    volumes:
+      - db:/data/db
+      - configdb:/data/configdb
+    depends_on:
+      - mongo
+
+volumes:
+  db:
+  configdb:
