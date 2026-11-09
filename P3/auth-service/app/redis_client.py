@@ -21,7 +21,7 @@ Devuelve el uuid
 async def crear_usuario(username: str, password: str, email: str):
     key = f"user:{username}"
 
-    if redis_client.exists(key):
+    if await redis_client.exists(key):
         return None
 
     uuid = uuid.uuid4()
@@ -40,10 +40,10 @@ de datos de redis existe esa entrada.
 
 Devuelve True si existe, False si no
 '''
-def autenticar(username: str, password: str) -> bool:
+async def autenticar(username: str, password: str) -> bool:
     key = f"user:{username}"
 
-    password_read = redis_client.hget(key,"password")
+    password_read = await redis_client.hget(key,"password")
     password_recieved = hashlib.sha256(password.enconde()).hexdigest()
     
     if password_read == password_recieved:
