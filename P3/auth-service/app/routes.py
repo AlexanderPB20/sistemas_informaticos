@@ -17,7 +17,7 @@ async def register():
     password = datos.get("password")
     email    = datos.get("email")
 
-    r = redis_client.crear_usuario(username, password, email)
+    r = await redis_client.crear_usuario(username, password, email)
     if r is None:
         return jsonify({'error':'El nombre de usuario ya existe'}),401
     return jsonify(r),201
@@ -35,11 +35,11 @@ async def login():
     username = datos.get("username")
     password = datos.get("password")
 
-    if not redis_client.autenticar(username, password):
+    if not await redis_client.autenticar(username, password):
         return jsonify({'error':'Usuario o contraseña incorrectos'}),401
     
     
-    token = redis_client.crear_sesion(username)
+    token = await redis_client.crear_sesion(username)
     return jsonify({"token":token}), 200
 
 @routes_blueprint.get("auth/validate")
@@ -49,7 +49,7 @@ async def validate():
         return Response(status=401)
     token = token[7:] #Eliminar "Bearer" del string
 
-    r = redis_client.recuperar_sesion(token)
+    r = await redis_client.recuperar_sesion(token)
     if r is None:
         return Response(status=401)
     return Response(status=201, header=r)
@@ -61,7 +61,7 @@ async def logout():
         return jsonify({"error":"No hay token en la cabecera"}),401
     token = token[7:] #Eliminar "Bearer" del string
     
-    r = redis_client.cerrar_sesion(token)
+    r = await redis_client.cerrar_sesion(token)
 
     if r is None:
         return jsonify({"error":"Token inválido o sesión expirada"}),401
