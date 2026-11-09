@@ -2,13 +2,9 @@ import redis.asyncio as redis
 import uuid
 import secrets
 import hashlib
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
 redis_client = redis.Redis(host="redis", port=6379, decode_responses=True)
 
-SERVER_SECRET = uuid.UUID(os.getenv("SERVER_SECRET"))
 SESSION_TTL = 300 #seconds
 
 
