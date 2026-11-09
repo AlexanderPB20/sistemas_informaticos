@@ -20,8 +20,8 @@ async def crear_usuario(username: str, password: str, email: str):
     if await redis_client.exists(key):
         return None
 
-    uuid = uuid.uuid4()
-    str_uuid = str(uuid)
+    user_uuid = uuid.uuid4()
+    str_uuid = str(user_uuid)
     password_hash = hashlib.sha256(password.encode()).hexdigest()
 
     await redis_client.hset(key, mapping={"username":username,

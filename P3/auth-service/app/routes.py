@@ -1,4 +1,4 @@
-from quart import Quart, jsonify, request, Blueprint
+from quart import Quart, jsonify, request, Blueprint, Response
 import redis_client
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
@@ -52,7 +52,7 @@ async def validate():
     r = await redis_client.recuperar_sesion(token)
     if r is None:
         return Response(status=401)
-    return Response(status=201, header=r)
+    return Response(status=200, headers=r)
 
 @routes_blueprint.post("auth/logout")
 async def logout():
