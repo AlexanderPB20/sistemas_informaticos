@@ -18,7 +18,7 @@ el username
 
 Devuelve el uuid
 '''
-def crear_usuario(username: str, password: str, email: str):
+async def crear_usuario(username: str, password: str, email: str):
     key = f"user:{username}"
 
     if redis_client.exists(key):
@@ -68,7 +68,7 @@ Crea una sesión para un usuario dado su username.
 
 Devuelve un token
 '''
-def crear_sesion(username: str):
+async def crear_sesion(username: str):
     token = generar_token()
     session = generar_session_key(token)
 
@@ -86,7 +86,7 @@ Busca en la base de datos una sesión a partir de un token
 Si existe, devuelve su uuid en un diccionario con clave X-User-Id,
 si no existe, devuelve None
 '''
-def recuperar_sesion(token: str):
+async def recuperar_sesion(token: str):
     sk = generar_session_key(token)
 
     session = await redis_client.hgetall(sk)
@@ -102,7 +102,7 @@ elimina la entrada. Cierra la sesión.
 Devuelve None si no existía una sesión con ese token o 
 un mensaje de info en un diccionario si se ha podido cerrar
 '''
-def cerrar_sesion(token: str):
+async def cerrar_sesion(token: str):
     sk = generar_session_key(token)
 
     session = await redis_client.delete(sk)
