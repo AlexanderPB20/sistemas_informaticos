@@ -44,7 +44,7 @@ async def autenticar(username: str, password: str) -> bool:
     key = f"user:{username}"
 
     password_read = await redis_client.hget(key,"password")
-    password_recieved = hashlib.sha256(password.enconde()).hexdigest()
+    password_recieved = hashlib.sha256(password.encode()).hexdigest()
     
     if password_read == password_recieved:
         return True
