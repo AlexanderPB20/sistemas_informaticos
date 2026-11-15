@@ -1,5 +1,5 @@
 from quart import Quart, jsonify, request, Blueprint, Response
-import redis_client
+import mongodb_client
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
 
@@ -34,10 +34,10 @@ async def list_oos():
 
 
 @routes_blueprint.post("library/books/<isbn>/borrow")
-async def borrow_book():
+async def borrow_book(isbn: str):
     raise NotImplementedError
 
 
 @routes_blueprint.post("library/books/<isbn>/return")
-async def return_book():
+async def return_book(isbn: str):
     raise NotImplementedError
