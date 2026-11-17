@@ -25,11 +25,11 @@ services:
     build: 
       network: host
       context: ./auth-service
-    command: python3 -m app
+    command: hypercorn --bind 0.0.0.0:5050 app:app
     ports:
       - "5050:5050"
     volumes:
-      - ./:/app
+      - ./auth-service:/app
     depends_on:
       - mongo
 
@@ -37,11 +37,11 @@ services:
     build: 
       network: host
       context: ./library-service
-    command: python3 -m app
+    command: hypercorn --bind 0.0.0.0:5051 app:app
     ports:
       - "5051:5051"
     volumes:
-      - ./:/app
+      - ./library-service:/app
     depends_on:
       - mongo
 
@@ -52,8 +52,6 @@ services:
       MONGO_INITDB_ROOT_USERNAME: alumnodb
       MONGO_INITDB_ROOT_PASSWORD: "1234"
       MONGO_INITDB_DATABASE: si1
-    build:
-      network: host
     ports:
       - "27017:27017"
     volumes:
@@ -64,3 +62,4 @@ services:
 volumes:
   db:
   configdb:
+  redis_data:
