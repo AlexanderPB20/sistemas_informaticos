@@ -103,4 +103,12 @@ async def borrow_book(isbn: str):
 
 @routes_blueprint.post("library/books/<isbn>/return")
 async def return_book(isbn: str):
-    raise NotImplementedError
+    user_id = request.headers.get("X-User-Id")
+    
+    resultado = await mongodb_client.finalizar_prestamo(isbn, user_id)
+
+    if resultado is None:
+        return jsonify({"error":"Libro no encontrado"}), 404
+        
+    return jsonify({"info":"Préstamo finalizado con éxito","book":resultado}),200
+    
