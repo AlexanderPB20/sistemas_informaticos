@@ -89,8 +89,17 @@ async def list_oos():
 
 @routes_blueprint.post("library/books/<isbn>/borrow")
 async def borrow_book(isbn: str):
-    raise NotImplementedError
+    user_id = request.headers.get("X-User-Id")
 
+    resultado = await mongodb_client.iniciar_prestamo(isbn, user_id)
+
+    if resultado is None:
+        resultado = await mongodb_client.buscar_libro(isbn)
+        if resultado is None:
+            return jsonify({"error":"Libro no encontrado"}), 404
+        return jsonify({"error":"El libro no tiene stock"}),409
+
+    return jsonify({"info":"Préstamo comenzado con éxito","book":resultado}),200
 
 @routes_blueprint.post("library/books/<isbn>/return")
 async def return_book(isbn: str):
