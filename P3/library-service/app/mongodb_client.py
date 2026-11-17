@@ -48,9 +48,9 @@ async def listar_libros():
 
     Devuelve una lista con todas las entradas encontradas.
     '''
-    resultado = await books.find()
+    resultado = books.find()
 
-    return resultado.to_list()
+    return await resultado.to_list()
 
 
 async def listar_sin_stock():
@@ -59,9 +59,9 @@ async def listar_sin_stock():
 
     Devuelve una lista con todas las entradas encontradas.
     '''
-    resultado = await books.find({"available_stock":0})
+    resultado = books.find({"available_stock":0})
 
-    return resultado.to_list()
+    return await resultado.to_list()
 
 
 async def eliminar_libro(isbn: str):
@@ -94,7 +94,7 @@ async def listar_prestamos(user_id: str):
     Devuelve una lista con todas las entradas encontradas
     '''
     #https://www.mongodb.com/docs/languages/python/pymongo-driver/current/crud/query/specify-query/#array-operators
-    resultado = await books.find({
+    resultado = books.find({
         "loan_history": {"$elemMatch": 
             {
                 "user_id": user_id,
@@ -103,7 +103,7 @@ async def listar_prestamos(user_id: str):
         }
     })
 
-    return resultado.to_list()
+    return await resultado.to_list()
 
 async def listar_historial(user_id: str):
     '''
@@ -111,7 +111,7 @@ async def listar_historial(user_id: str):
 
     Devuelve una lista con todas las entradas encontradas
     '''
-    resultado = await books.find({
+    resultado = books.find({
         "loan_history": {"$elemMatch":
             {
                 "user_id":user_id,
@@ -120,7 +120,7 @@ async def listar_historial(user_id: str):
         }
     })
 
-    return resultado.to_list()
+    return await resultado.to_list()
 
 
 
@@ -131,7 +131,7 @@ async def iniciar_prestamo(isbn: str, user_id:str):
     Devuelve la entrada del libro modificada en la BBDD
     '''
     fecha = datetime.now(timezone.utc)
-    formateada = fecha.fromisoformat(timespec="miliseconds").replace("+00:00","Z")
+    formateada = fecha.fromisoformat(timespec="milliseconds").replace("+00:00","Z")
 
     resultado = await books.find_one_and_update(
         {"isbn":isbn,
@@ -155,7 +155,7 @@ async def finalizar_prestamo(isbn: str, user_id: str):
     Devuelve la entrada del libro modificada en la BBDD
     '''
     fecha = datetime.now(timezone.utc)
-    formateada = fecha.fromisoformat(timespec="miliseconds").replace("+00:00","Z")
+    formateada = fecha.fromisoformat(timespec="milliseconds").replace("+00:00","Z")
 
     resultado = await books.find_one_and_update(
         {"isbn":isbn,
