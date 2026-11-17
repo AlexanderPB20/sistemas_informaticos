@@ -138,7 +138,7 @@ async def iniciar_prestamo(isbn: str, user_id:str):
         {"isbn":isbn,
          "available_stock":{"$gt":0}},
         {"$inc": {"available_stock":-1},
-         "$set": {"loan_history": {
+         "$push": {"loan_history": {
                     "user_id":user_id,
                     "loan_date":formateada,
                     "return_date":None
