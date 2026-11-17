@@ -64,7 +64,11 @@ async def get_book_details(isbn: str):
 
 @routes_blueprint.get("library/loans/active")
 async def list_loans():
-    raise NotImplementedError
+    user_id = request.headers.get("X-User-Id")
+
+    resultado = mongodb_client.listar_prestamos(user_id)
+
+    return jsonify({"loans":resultado}),200
 
 
 @routes_blueprint.get("library/loans/history")
