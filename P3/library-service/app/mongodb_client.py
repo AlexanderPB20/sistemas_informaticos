@@ -160,8 +160,8 @@ async def finalizar_prestamo(isbn: str, user_id: str):
 
     resultado = await books.find_one_and_update(
         {"isbn":isbn,
-         "$elemMatch":{
-            "loan_history":{
+         "loan_history":{
+            "$elemMatch":{
                 "user_id":user_id,
                 "return_date":None                
             }
