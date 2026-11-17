@@ -3,7 +3,7 @@ from . import mongodb_client
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
 
-@routes_blueprint.post("library/books")
+@routes_blueprint.post("/library/books")
 async def create_book():
     datos = await request.get_json()
     if not datos:
@@ -32,7 +32,7 @@ async def create_book():
     return jsonify({'info':'Libro añadido correctamente.','book':resultado}), 201
 
 
-@routes_blueprint.delete("library/books/<isbn>")
+@routes_blueprint.delete("/library/books/<isbn>")
 async def delete_book(isbn: str):
     datos = await request.get_json()
     if not datos:
@@ -50,7 +50,7 @@ async def delete_book(isbn: str):
     return jsonify({'info':'Libro eliminado correctamente.','book':resultado}), 201
 
 
-@routes_blueprint.get("library/books/<isbn>")
+@routes_blueprint.get("/library/books/<isbn>")
 async def get_book_details(isbn: str):
 
     resultado = await mongodb_client.buscar_libro(isbn)
@@ -62,7 +62,7 @@ async def get_book_details(isbn: str):
 
     
 
-@routes_blueprint.get("library/loans/active")
+@routes_blueprint.get("/library/loans/active")
 async def list_loans():
     user_id = request.headers.get("X-User-Id")
 
@@ -71,7 +71,7 @@ async def list_loans():
     return jsonify({"active_loans":resultado}),200
 
 
-@routes_blueprint.get("library/loans/history")
+@routes_blueprint.get("/library/loans/history")
 async def list_history():
     user_id = request.headers.get("X-User-Id")
 
@@ -80,14 +80,14 @@ async def list_history():
     return jsonify({"history":resultado}), 200
 
 
-@routes_blueprint.get("library/books/out-of-stock")
+@routes_blueprint.get("/library/books/out-of-stock")
 async def list_oos():
     resultado = await mongodb_client.listar_sin_stock()
 
     return jsonify({"books":resultado}),200
 
 
-@routes_blueprint.post("library/books/<isbn>/borrow")
+@routes_blueprint.post("/library/books/<isbn>/borrow")
 async def borrow_book(isbn: str):
     user_id = request.headers.get("X-User-Id")
 
@@ -101,7 +101,7 @@ async def borrow_book(isbn: str):
 
     return jsonify({"info":"Préstamo comenzado con éxito","book":resultado}),200
 
-@routes_blueprint.post("library/books/<isbn>/return")
+@routes_blueprint.post("/library/books/<isbn>/return")
 async def return_book(isbn: str):
     user_id = request.headers.get("X-User-Id")
     

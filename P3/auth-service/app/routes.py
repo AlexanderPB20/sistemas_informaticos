@@ -3,7 +3,7 @@ from . import redis_client
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
 
-@routes_blueprint.post("auth/register")
+@routes_blueprint.post("/auth/register")
 async def register():
     datos = await request.get_json()
     if not datos:
@@ -22,7 +22,7 @@ async def register():
         return jsonify({'error':'El nombre de usuario ya existe'}),401
     return jsonify(r),201
     
-@routes_blueprint.post("auth/login")
+@routes_blueprint.post("/auth/login")
 async def login():
     datos = await request.get_json()
     if not datos:
@@ -42,7 +42,7 @@ async def login():
     token = await redis_client.crear_sesion(username)
     return jsonify({"token":token}), 200
 
-@routes_blueprint.get("auth/validate")
+@routes_blueprint.get("/auth/validate")
 async def validate():
     token = request.headers.get("Authorization")
     if not token or not token.startswith("Bearer "):
@@ -54,7 +54,7 @@ async def validate():
         return Response(status=401)
     return Response(status=200, headers=r)
 
-@routes_blueprint.post("auth/logout")
+@routes_blueprint.post("/auth/logout")
 async def logout():
     token = request.headers.get("Authorization")
     if not token or not token.startswith("Bearer "):
