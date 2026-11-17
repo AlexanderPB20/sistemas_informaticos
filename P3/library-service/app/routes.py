@@ -68,12 +68,16 @@ async def list_loans():
 
     resultado = mongodb_client.listar_prestamos(user_id)
 
-    return jsonify({"loans":resultado}),200
+    return jsonify({"active_loans":resultado}),200
 
 
 @routes_blueprint.get("library/loans/history")
 async def list_history():
-    raise NotImplementedError
+    user_id = request.headers.get("X-User-Id")
+
+    resultado = mongodb_client.listar_historial(user_id)
+
+    return jsonify({"history":resultado}), 200
 
 
 @routes_blueprint.get("library/books/out-of-stock")
