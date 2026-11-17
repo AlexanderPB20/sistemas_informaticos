@@ -1,5 +1,5 @@
 from quart import Quart, jsonify, request, Blueprint, Response
-import redis_client
+from . import redis_client
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
 
