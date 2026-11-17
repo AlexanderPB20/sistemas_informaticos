@@ -66,7 +66,7 @@ async def get_book_details(isbn: str):
 async def list_loans():
     user_id = request.headers.get("X-User-Id")
 
-    resultado = mongodb_client.listar_prestamos(user_id)
+    resultado = await mongodb_client.listar_prestamos(user_id)
 
     return jsonify({"active_loans":resultado}),200
 
@@ -75,14 +75,16 @@ async def list_loans():
 async def list_history():
     user_id = request.headers.get("X-User-Id")
 
-    resultado = mongodb_client.listar_historial(user_id)
+    resultado = await mongodb_client.listar_historial(user_id)
 
     return jsonify({"history":resultado}), 200
 
 
 @routes_blueprint.get("library/books/out-of-stock")
 async def list_oos():
-    raise NotImplementedError
+    resultado = await mongodb_client.listar_sin_stock()
+
+    return jsonify({"books":resultado}),200
 
 
 @routes_blueprint.post("library/books/<isbn>/borrow")
