@@ -8,15 +8,15 @@ async def create_book():
     datos = await request.get_json()
     if not datos:
         return jsonify({'error':'''La petición no contiene JSON. Debe contener los siguientes campos:\n
- - isbn: (string)\n - title: (string)\n - author: (string)\n - year: (int)\n - publisher: (string)\n - stock: (int)'''}),400
+ - isbn: (string)\n - title: (string)\n - author: (string)\n - year: (int)\n - publisher: (string)\n - available_stock: (int)'''}),400
 
-    campos = ["isbn", "title", "author", "year", "publisher", "stock"]
+    campos = ["isbn", "title", "author", "year", "publisher", "available_stock"]
     for campo in campos:
         if campo not in datos:
             return jsonify({'error':f'El JSON no contiene el campo "{campo}".'}), 400
 
-    if datos["stock"] < 0:
-        return jsonify({'error':'El campo "stock" no puede contener un número inferior a 0.'}), 400
+    if datos["available_stock"] < 0:
+        return jsonify({'error':'El campo "available_stock" no puede contener un número inferior a 0.'}), 400
 
     resultado = await mongodb_client.insertar_libro(
         datos.get("isbn"),
@@ -24,7 +24,7 @@ async def create_book():
         datos.get("author"),
         datos.get("year"),
         datos.get("publisher"),
-        datos.get("stock")
+        datos.get("available_stock")
     )
 
     if resultado is None:
