@@ -47,7 +47,7 @@ async def delete_book(isbn: str):
             return jsonify({'error':'ISBN no encontrado.'}), 404
     if resultado == 0:
             return jsonify({'error':'No se pudo eliminar. Libro con devoluciones pendientes.'}), 409
-    return jsonify({'info':'Libro eliminado correctamente.','book':resultado}), 201
+    return jsonify({'info':'Libro eliminado correctamente.','amount':resultado}), 201
 
 
 @routes_blueprint.get("/library/books/<isbn>")
