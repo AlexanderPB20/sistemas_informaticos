@@ -34,14 +34,8 @@ async def create_book():
 
 @routes_blueprint.delete("/library/books/<isbn>")
 async def delete_book(isbn: str):
-    datos = await request.get_json()
-    if not datos:
-        return jsonify({'error':'La petición no contiene JSON. Debe contener los siguientes campos:\n - isbn: (string)\n'}),400
 
-    if "isbn" not in datos:
-        return jsonify({'error':'El JSON no contiene el campo "isbn".'}), 400
-    
-    resultado = await mongodb_client.eliminar_libro(datos.get("isbn"))
+    resultado = await mongodb_client.eliminar_libro(isbn)
     
     if resultado == -1:
             return jsonify({'error':'ISBN no encontrado.'}), 404
