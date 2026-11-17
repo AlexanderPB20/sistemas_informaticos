@@ -1,4 +1,5 @@
 from pymongo import AsyncMongoClient as mongo
+from datetime import datetime, timezone
 
 uri = "mongodb://alumnodb:1234@mongo:27017/?authSource=admin"
 
@@ -90,7 +91,7 @@ Devuelve una lista con todas las entradas encontradas
 '''
 async def listar_prestamos(user_id: str):
     #https://www.mongodb.com/docs/languages/python/pymongo-driver/current/crud/query/specify-query/#array-operators
-    resultado = books.find({
+    resultado = await books.find({
         "loan_history": {"$elemMatch": 
             {
                 "user_id": user_id,
@@ -107,7 +108,7 @@ Lista el historial de préstamos (devueltos) del usuario especificado
 Devuelve una lista con todas las entradas encontradas
 '''
 async def listar_historial(user_id: str):
-    resultado = books.find({
+    resultado = await books.find({
         "loan_history": {"$elemMatch":
             {
                 "user_id":user_id,
@@ -117,3 +118,48 @@ async def listar_historial(user_id: str):
     })
 
     return resultado.to_list()
+
+
+
+async def iniciar_prestamo(isbn: str, user_id:str):
+
+    fecha = datetime.now(timezone.utc)
+    formateada = fecha.fromisoformat(timespec="miliseconds").replace("+00:00","Z")
+
+    resultado = await books.find_one_and_update(
+        {"isbn":isbn,
+         "available_stock":{"$gt":0}},
+        {"$inc": {"available_stock":-1},
+         "$set": {"loan_history": {
+                    "user_id":user_id,
+                    "loan_date":formateada,
+                    "return_date":None
+                }}
+        },return_document=ReturnDocument.AFTER
+    )
+
+    return resultado
+
+
+async def finalizar_prestamo(isbn: str, user_id: str):
+
+    fecha = datetime.now(timezone.utc)
+    formateada = fecha.fromisoformat(timespec="miliseconds").replace("+00:00","Z")
+
+    resultado = await books.find_one_and_update(
+        {"isbn":isbn,
+         "$elemMatch":{
+            "loan_history":{
+                "user_id":user_id,
+                "return_date":None                
+            }
+         }
+        },
+        {"$inc": {"available_stock":1},
+         "$set": {"loan_history": {
+                    "return_date":formateada
+                }}
+        },return_document=ReturnDocument.AFTER
+    )
+
+    return resultado
