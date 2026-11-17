@@ -1,4 +1,5 @@
 from pymongo import AsyncMongoClient as mongo
+from pymongo import ReturnDocument
 from datetime import datetime, timezone
 
 uri = "mongodb://alumnodb:1234@mongo:27017/?authSource=admin"
@@ -29,7 +30,7 @@ async def insertar_libro(isbn: str, title: str, author: str, year: int, publishe
 
     resultado = await books.insert_one(libro)
 
-    return resultado
+    return resultado.inserted_id
 
 async def buscar_libro(isbn: str):
     '''
@@ -70,7 +71,7 @@ async def eliminar_libro(isbn: str):
 
     Devuelve -1 en caso de no encontrar el libro o no poder realizar el eliminado
     Devuelve 0 en caso de que hayan devoluciones pendientes
-    Devuelve un objeto DeleteResult de pymongo en caso de éxito
+    Devuelve la cantidad de libros eliminados de la base de datos en caso de éxito
     '''
     resultado = await buscar_libro(isbn)
 
@@ -82,10 +83,10 @@ async def eliminar_libro(isbn: str):
             return 0
 
     resultado = await books.delete_one({"isbn":isbn})
-    if resultado is None:
+    if resultado.deleted_count == 0:
         return -1
 
-    return resultado
+    return resulado.deleted_count
 
 async def listar_prestamos(user_id: str):
     '''
@@ -131,7 +132,7 @@ async def iniciar_prestamo(isbn: str, user_id:str):
     Devuelve la entrada del libro modificada en la BBDD
     '''
     fecha = datetime.now(timezone.utc)
-    formateada = fecha.fromisoformat(timespec="milliseconds").replace("+00:00","Z")
+    formateada = fecha.isoformat(timespec="milliseconds").replace("+00:00","Z")
 
     resultado = await books.find_one_and_update(
         {"isbn":isbn,
@@ -155,7 +156,7 @@ async def finalizar_prestamo(isbn: str, user_id: str):
     Devuelve la entrada del libro modificada en la BBDD
     '''
     fecha = datetime.now(timezone.utc)
-    formateada = fecha.fromisoformat(timespec="milliseconds").replace("+00:00","Z")
+    formateada = fecha.isoformat(timespec="milliseconds").replace("+00:00","Z")
 
     resultado = await books.find_one_and_update(
         {"isbn":isbn,
