@@ -9,12 +9,12 @@ db = cliente["si1"]
 
 books = db["books"]
 
-'''
-Inserta un libro con los parametros introducidos
-
-Devuelve el nuevo id del libro insertado
-'''
 async def insertar_libro(isbn: str, title: str, author: str, year: int, publisher: str, stock: int):
+    '''
+    Inserta un libro con los parametros introducidos
+
+    Devuelve el nuevo id del libro insertado
+    '''
     loan_history = []
 
     libro = {
@@ -31,44 +31,47 @@ async def insertar_libro(isbn: str, title: str, author: str, year: int, publishe
 
     return resultado
 
-'''
-Busca un libro con isbn introducido en la base de datos
-
-Devuelve el libro o None si no se encuentra
-'''
 async def buscar_libro(isbn: str):
+    '''
+    Busca un libro con isbn introducido en la base de datos
+
+    Devuelve el libro o None si no se encuentra
+    '''
     resultado = await books.find_one({"isbn":isbn})
 
     return resultado
 
-'''
-Lista todos los libros de la base de datos
 
-Devuelve una lista con todas las entradas encontradas.
-'''
 async def listar_libros():
+    '''
+    Lista todos los libros de la base de datos
+
+    Devuelve una lista con todas las entradas encontradas.
+    '''
     resultado = await books.find()
 
     return resultado.to_list()
 
-'''
-Lista todos los libros fuera de stock
 
-Devuelve una lista con todas las entradas encontradas.
-'''
 async def listar_sin_stock():
+    '''
+    Lista todos los libros fuera de stock
+
+    Devuelve una lista con todas las entradas encontradas.
+    '''
     resultado = await books.find({"available_stock":0})
 
     return resultado.to_list()
 
-'''
-Elimina un libro de la base de datos, si no tiene devoluciones pendientes
 
-Devuelve -1 en caso de no encontrar el libro o no poder realizar el eliminado
-Devuelve 0 en caso de que hayan devoluciones pendientes
-Devuelve un objeto DeleteResult de pymongo en caso de éxito
-'''
 async def eliminar_libro(isbn: str):
+    '''
+    Elimina un libro de la base de datos, si no tiene devoluciones pendientes
+
+    Devuelve -1 en caso de no encontrar el libro o no poder realizar el eliminado
+    Devuelve 0 en caso de que hayan devoluciones pendientes
+    Devuelve un objeto DeleteResult de pymongo en caso de éxito
+    '''
     resultado = await buscar_libro(isbn)
 
     if resultado is None:
@@ -84,12 +87,12 @@ async def eliminar_libro(isbn: str):
 
     return resultado
 
-'''
-Lista todos los libros pendientes de devolver por el usuario especificado
-
-Devuelve una lista con todas las entradas encontradas
-'''
 async def listar_prestamos(user_id: str):
+    '''
+    Lista todos los libros pendientes de devolver por el usuario especificado
+
+    Devuelve una lista con todas las entradas encontradas
+    '''
     #https://www.mongodb.com/docs/languages/python/pymongo-driver/current/crud/query/specify-query/#array-operators
     resultado = await books.find({
         "loan_history": {"$elemMatch": 
@@ -102,12 +105,12 @@ async def listar_prestamos(user_id: str):
 
     return resultado.to_list()
 
-'''
-Lista el historial de préstamos (devueltos) del usuario especificado
-
-Devuelve una lista con todas las entradas encontradas
-'''
 async def listar_historial(user_id: str):
+    '''
+    Lista el historial de préstamos (devueltos) del usuario especificado
+
+    Devuelve una lista con todas las entradas encontradas
+    '''
     resultado = await books.find({
         "loan_history": {"$elemMatch":
             {
@@ -122,7 +125,11 @@ async def listar_historial(user_id: str):
 
 
 async def iniciar_prestamo(isbn: str, user_id:str):
+    '''
+    Inicia el préstamo de un libro <isbn> a nombre del usuario con id <user_id>
 
+    Devuelve la entrada del libro modificada en la BBDD
+    '''
     fecha = datetime.now(timezone.utc)
     formateada = fecha.fromisoformat(timespec="miliseconds").replace("+00:00","Z")
 
@@ -142,7 +149,11 @@ async def iniciar_prestamo(isbn: str, user_id:str):
 
 
 async def finalizar_prestamo(isbn: str, user_id: str):
+    '''
+    Finaliza el préstamo del usuario <user_id> para el libro <isbn>
 
+    Devuelve la entrada del libro modificada en la BBDD
+    '''
     fecha = datetime.now(timezone.utc)
     formateada = fecha.fromisoformat(timespec="miliseconds").replace("+00:00","Z")
 
