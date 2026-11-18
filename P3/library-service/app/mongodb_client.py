@@ -86,7 +86,7 @@ async def eliminar_libro(isbn: str):
     if resultado.deleted_count == 0:
         return -1
 
-    return resulado.deleted_count
+    return resultado.deleted_count
 
 async def listar_prestamos(user_id: str):
     '''
