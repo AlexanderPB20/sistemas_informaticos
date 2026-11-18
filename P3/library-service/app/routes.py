@@ -29,7 +29,7 @@ async def create_book():
 
     if resultado is None:
         return jsonify({'error':'Error al insertar el libro.'}), 300
-    return jsonify({'info':'Libro añadido correctamente.','book':resultado}), 201
+    return jsonify({'info':'Libro añadido correctamente.','book':str(resultado)}), 201
 
 
 @routes_blueprint.delete("/library/books/<isbn>")
@@ -41,7 +41,7 @@ async def delete_book(isbn: str):
             return jsonify({'error':'ISBN no encontrado.'}), 404
     if resultado == 0:
             return jsonify({'error':'No se pudo eliminar. Libro con devoluciones pendientes.'}), 409
-    return jsonify({'info':'Libro eliminado correctamente.','amount':resultado}), 201
+    return jsonify({'info':'Libro eliminado correctamente.','amount':str(resultado)}), 201
 
 
 @routes_blueprint.get("/library/books/<isbn>")
@@ -51,8 +51,15 @@ async def get_book_details(isbn: str):
     
     if resultado is None:
             return jsonify({'error':'ISBN no encontrado.'}), 404
-    
-    return jsonify({'book':resultado}), 200
+    document ={
+         "isbn":resultado["isbn"],
+         "title":resultado["title"],
+         "author":resultado["author"],
+         "year":resultado["year"],
+         "publisher":resultado["publisher"],
+         "available_stock":resultado["available_stock"],
+    }
+    return jsonify(document), 200
 
     
 
@@ -62,7 +69,7 @@ async def list_loans():
 
     resultado = await mongodb_client.listar_prestamos(user_id)
 
-    return jsonify({"active_loans":resultado}),200
+    return resultado,200
 
 
 @routes_blueprint.get("/library/loans/history")
@@ -71,14 +78,14 @@ async def list_history():
 
     resultado = await mongodb_client.listar_historial(user_id)
 
-    return jsonify({"history":resultado}), 200
+    return jsonify({"history":str(resultado)}), 200
 
 
 @routes_blueprint.get("/library/books/out-of-stock")
 async def list_oos():
     resultado = await mongodb_client.listar_sin_stock()
 
-    return jsonify({"books":resultado}),200
+    return jsonify({"books":str(resultado)}),200
 
 
 @routes_blueprint.post("/library/books/<isbn>/borrow")
@@ -93,7 +100,7 @@ async def borrow_book(isbn: str):
             return jsonify({"error":"Libro no encontrado"}), 404
         return jsonify({"error":"El libro no tiene stock"}),409
 
-    return jsonify({"info":"Préstamo comenzado con éxito","book":resultado}),200
+    return jsonify({"info":"Préstamo comenzado con éxito"}),200
 
 @routes_blueprint.post("/library/books/<isbn>/return")
 async def return_book(isbn: str):
@@ -104,5 +111,5 @@ async def return_book(isbn: str):
     if resultado is None:
         return jsonify({"error":"Libro no encontrado"}), 404
         
-    return jsonify({"info":"Préstamo finalizado con éxito","book":resultado}),200
+    return jsonify({"info":"Préstamo finalizado con éxito","book":str(resultado)}),200
     
