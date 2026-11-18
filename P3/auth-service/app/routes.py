@@ -19,7 +19,7 @@ async def register():
 
     r = await redis_client.crear_usuario(username, password, email)
     if r is None:
-        return jsonify({'error':'El nombre de usuario ya existe'}),401
+        return jsonify({'error':'El nombre de usuario ya existe'}),409
     return jsonify(r),201
     
 @routes_blueprint.post("/auth/login")
