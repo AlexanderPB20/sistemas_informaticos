@@ -1,5 +1,6 @@
 from pymongo import AsyncMongoClient as mongo
 from pymongo import ReturnDocument
+import json
 from datetime import datetime, timezone
 
 uri = "mongodb://alumnodb:1234@mongo:27017/?authSource=admin"
@@ -116,7 +117,7 @@ async def listar_historial(user_id: str):
         "loan_history": {"$elemMatch":
             {
                 "user_id":user_id,
-                "return_date": {"$not": None}
+                "return_date": {"$ne": None}
             }
         }
     })
@@ -168,10 +169,31 @@ async def finalizar_prestamo(isbn: str, user_id: str):
          }
         },
         {"$inc": {"available_stock":1},
-         "$set": {"loan_history": {
-                    "return_date":formateada
-                }}
+         "$set": {"loan_history.$.return_date":formateada
+                }
         },return_document=ReturnDocument.AFTER
     )
 
     return resultado
+
+
+async def populate():
+    '''
+    Función que se ejecuta cada vez que se inicia el servicio. Pobla
+    la base de datos con el fichero populate.json proporcionado
+    
+    Devuelve la cantidad de libros insertados'''
+    with open("populate.json","r",encoding="utf-8") as datos:
+        libros = json.load(datos)
+    insertados = 0
+    for libro in libros:
+        resultado = await books.update_one(
+            {"isbn":libro["isbn"]},
+            {"$setOnInsert": libro},
+            upsert=True
+        )
+
+        if resultado.upserted_id is not None:
+            insertados += 1
+
+    return insertados
