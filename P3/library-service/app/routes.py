@@ -28,7 +28,7 @@ async def create_book():
     )
 
     if resultado is None:
-        return jsonify({'error':'Error al insertar el libro.'}), 300
+        return jsonify({'error':'Error al insertar el libro.'}), 400
     return jsonify({'info':'Libro añadido correctamente.','book':str(resultado)}), 201
 
 
