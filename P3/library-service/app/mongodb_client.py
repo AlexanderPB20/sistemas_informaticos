@@ -189,7 +189,7 @@ async def populate():
     for libro in libros:
         resultado = await books.update_one(
             {"isbn":libro["isbn"]},
-            {"$setOnInsert": libro},
+            {"$setOnInsert": libro}, #setoninsert inserta si upsert=true, si existe Y se actualiza, no hace nada
             upsert=True
         )
 
