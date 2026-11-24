@@ -15,8 +15,15 @@ async def insertar_libro(isbn: str, title: str, author: str, year: int, publishe
     '''
     Inserta un libro con los parametros introducidos
 
-    Devuelve el nuevo id del libro insertado
+    Devuelve el nuevo id del libro insertado o None si ya se encontraba en la base de datos
     '''
+
+    #Comprobar que no existe ya
+    existente = await books.find_one({"isbn": isbn})
+
+    if existente is not None:
+        return None
+    
     loan_history = []
 
     libro = {
