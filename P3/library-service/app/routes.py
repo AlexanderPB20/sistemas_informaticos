@@ -69,6 +69,9 @@ async def list_loans():
 
     resultado = await mongodb_client.listar_prestamos(user_id)
 
+    #Reconvertir los libros a string para poder devolerlos luego
+    for libro in resultado:
+        libro["_id"] = str(libro["_id"])
     return resultado,200
 
 
@@ -77,15 +80,22 @@ async def list_history():
     user_id = request.headers.get("X-User-Id")
 
     resultado = await mongodb_client.listar_historial(user_id)
-
-    return jsonify({"history":str(resultado)}), 200
+    
+    #Reconvertir los libros a string para poder devolerlos luego
+    for libro in resultado:
+        libro["_id"] = str(libro["_id"])
+    return jsonify(resultado), 200
 
 
 @routes_blueprint.get("/library/books/out-of-stock")
 async def list_oos():
     resultado = await mongodb_client.listar_sin_stock()
 
-    return jsonify({"books":str(resultado)}),200
+    #Reconvertir los libros a string para poder devolerlos luego
+    for libro in resultado:
+        libro["_id"] = str(libro["_id"])
+
+    return jsonify({"books":resultado}),200
 
 
 @routes_blueprint.post("/library/books/<isbn>/borrow")
@@ -108,8 +118,10 @@ async def return_book(isbn: str):
     
     resultado = await mongodb_client.finalizar_prestamo(isbn, user_id)
 
+    #Reconvertir el libro a string para poder devolerlo luego
+    resultado["_id"] = str(resultado["_id"])
     if resultado is None:
         return jsonify({"error":"Libro no encontrado"}), 404
         
-    return jsonify({"info":"Préstamo finalizado con éxito","book":str(resultado)}),200
+    return jsonify({"info":"Préstamo finalizado con éxito","book":resultado}),200
     
