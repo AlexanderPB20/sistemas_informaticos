@@ -183,7 +183,14 @@ async def populate():
     la base de datos con el fichero populate.json proporcionado
     
     Devuelve la cantidad de libros insertados'''
-    with open("populate.json","r",encoding="utf-8") as datos:
+    from pathlib import Path
+
+    #Localizamos la ruta absoluta para el fichero de populate
+    ruta = Path(__file__).resolve().parent / "populate.json"
+    if not ruta.exists():
+        return 0
+    
+    with open(ruta,"r",encoding="utf-8") as datos:
         libros = json.load(datos)
     insertados = 0
     for libro in libros:
