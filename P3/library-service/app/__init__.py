@@ -1,4 +1,4 @@
-from quart import Quart, jsonify, request
+from quart import Quart, jsonify
 from .routes import routes_blueprint
 from . import mongodb_client
 app = Quart(__name__)

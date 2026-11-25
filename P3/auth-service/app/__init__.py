@@ -1,4 +1,4 @@
-from quart import Quart, jsonify, request
+from quart import Quart 
 from .routes import routes_blueprint
 
 app = Quart(__name__)

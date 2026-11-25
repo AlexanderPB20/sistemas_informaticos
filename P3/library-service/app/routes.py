@@ -1,4 +1,4 @@
-from quart import Quart, jsonify, request, Blueprint, Response
+from quart import jsonify, request, Blueprint
 from . import mongodb_client
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
